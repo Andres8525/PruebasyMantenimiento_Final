@@ -13,22 +13,25 @@ services:
       timeout: 3s
       retries: 5
 
-  # Contenedor ejecutor de pruebas (efímero): corre TODA la suite y deja reportes
+  # Semanas 4-5 — Ejecutor de pruebas efímero: suite completa + linter + reportes
   test-runner:
     build:
       context: .
       dockerfile: docker/qa.Dockerfile
+    image: qa-runner:v1
     container_name: ejecutor_pruebas
     depends_on:
       api-service:
         condition: service_healthy
     environment:
+      - ENV=TESTING
       - API_URL=http://api-service:8000
     volumes:
       - ./reports:/workspace/reports
 
-  # Dashboard de calidad: lee los reportes y permite relanzar las pruebas
+  # Dashboard de calidad: lee los reportes y permite relanzar pruebas y carga
   dashboard:
+    image: qa-runner:v1
     build:
       context: .
       dockerfile: docker/qa.Dockerfile
@@ -43,3 +46,29 @@ services:
       - API_URL=http://api-service:8000
     volumes:
       - ./reports:/workspace/reports
+
+  # Semana 8 — API objetivo de la prueba de carga (/fast y /slow)
+  api-carga:
+    profiles: ["carga"]
+    image: qa-runner:v1
+    build:
+      context: .
+      dockerfile: docker/qa.Dockerfile
+    container_name: api_carga
+    command: ["uvicorn", "src.semana8.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8001:8000"
+
+  # Semana 8 — Interfaz web de Locust (http://localhost:8089)
+  locust:
+    profiles: ["carga"]
+    image: qa-runner:v1
+    build:
+      context: .
+      dockerfile: docker/qa.Dockerfile
+    container_name: locust_enjambre
+    command: ["locust", "-f", "load/locustfile.py", "--host", "http://api-carga:8000"]
+    ports:
+      - "8089:8089"
+    depends_on:
+      - api-carga
