@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard de Calidad</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f4f2;
+    --surface-1: #fcfcfb;
+    --border: #e2e1dc;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #7a7974;
+    --grid: #e8e7e2;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --critical: #d03b3b;
+    --good-bg: #e6f4e6;
+    --critical-bg: #fbe9e9;
+    --accent: #2a78d6;
+    --code-bg: #f0efeb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0: #121211;
+      --surface-1: #1a1a19;
+      --border: #2e2e2c;
+      --text-primary: #f0efec;
+      --text-secondary: #c3c2b7;
+      --text-muted: #8f8e86;
+      --grid: #2a2a28;
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --good-bg: #16301a;
+      --critical-bg: #3a1c1c;
+      --accent: #3987e5;
+      --code-bg: #232321;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --border: #2e2e2c;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8e86;
+    --grid: #2a2a28;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --good-bg: #16301a;
+    --critical-bg: #3a1c1c;
+    --accent: #3987e5;
+    --code-bg: #232321;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--surface-0); color: var(--text-primary);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
+  h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .sub { color: var(--text-secondary); margin: 4px 0 0; }
+  .muted { color: var(--text-muted); }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  section { margin-top: 24px; }
+
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  select, button {
+    font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface-1); color: var(--text-primary);
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: progress; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .kpi .label { color: var(--text-secondary); font-size: 13px; }
+  .kpi .value { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi .note { color: var(--text-muted); font-size: 13px; }
+  .meter { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; margin-top: 8px; position: relative; }
+  .meter > span { display: block; height: 100%; background: var(--series-1); border-radius: 4px; }
+  .meter .threshold { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text-primary); }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+  .badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .b-passed { color: var(--good); background: var(--good-bg); }
+  .b-failed, .b-error { color: var(--critical); background: var(--critical-bg); }
+  .b-skipped { color: var(--text-secondary); background: var(--code-bg); }
+  .gate { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; }
+  .gate.ok { color: var(--good); } .gate.ko { color: var(--critical); }
+  .gate .ico { font-size: 24px; }
+
+  .weeks { display: grid; gap: 12px; }
+  details.week { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; }
+  details.week > summary { list-style: none; cursor: pointer; padding: 16px 20px; display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: center; }
+  details.week > summary::-webkit-details-marker { display: none; }
+  .wk-title { font-weight: 650; font-size: 16px; }
+  .wk-title .num { color: var(--text-muted); font-weight: 500; margin-right: 6px; }
+  .wk-tech { color: var(--text-secondary); font-size: 13px; }
+  .stack { grid-column: 1 / -1; display: flex; gap: 2px; height: 10px; }
+  .stack span { border-radius: 4px; min-width: 4px; }
+  .s-pass { background: var(--good); } .s-fail { background: var(--critical); } .s-skip { background: var(--warning); }
+  .wk-body { padding: 0 20px 16px; overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 8px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 13px; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+  pre.fail { margin: 6px 0 0; white-space: pre-wrap; font-size: 12px; color: var(--critical); background: var(--critical-bg); padding: 8px; border-radius: 6px; max-height: 200px; overflow: auto; }
+  pre.console { background: var(--code-bg); padding: 12px; border-radius: 8px; max-height: 360px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
+
+  .chart-wrap { position: relative; }
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 12px; height: 2px; vertical-align: middle; margin-right: 6px; }
+  #tooltip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; white-space: nowrap; }
+  .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 900px) { .grid-2 { grid-template-columns: 3fr 2fr; } }
+  .empty { text-align: center; padding: 48px 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Dashboard de Calidad</h1>
+      <p class="sub">Pruebas y Mantenimiento de Software · Proyecto Final DevOps</p>
+      <p class="muted" style="margin:4px 0 0;font-size:13px">
+        {% if r.meta %}Última ejecución: {{ r.meta.fecha | replace("T", " ") }} · modo {{ r.meta.modo }} · filtro {{ r.meta.filtro }}{% else %}Sin ejecuciones todavía{% endif %}
+      </p>
+    </div>
+    <div class="controls">
+      <label for="filtro" class="muted">Semana</label>
+      <select id="filtro">
+        {% for f in filtros %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+      </select>
+      <button id="run" class="primary">▶ Ejecutar pruebas</button>
+    </div>
+  </header>
+
+  {% if not r.hay_datos %}
+  <div class="card empty">
+    <h2>Aún no hay resultados</h2>
+    <p class="muted">Pulsa <strong>Ejecutar pruebas</strong> o corre <code>python scripts/run_tests.py</code> en la terminal.</p>
+  </div>
+  {% else %}
+
+  <!-- KPIs -->
+  <section class="kpis" style="margin-top:0">
+    <div class="card kpi">
+      <div class="label">Quality Gate</div>
+      {% if r.gate.aprobado %}
+        <div class="gate ok"><span class="ico">✔</span>APROBADO</div>
+      {% else %}
+        <div class="gate ko"><span class="ico">✖</span>RECHAZADO</div>
+      {% endif %}
+      <div class="note">
+        {{ "✔" if r.gate.pruebas_ok else "✖" }} 0 fallos ·
+        {{ "✔" if r.gate.cobertura_ok else "✖" }} cobertura ≥ {{ r.umbral | int }}%
+      </div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Pruebas ejecutadas</div>
+      <div class="value">{{ r.total }}</div>
+      <div class="note">
+        <span class="badge b-passed">{{ r.passed }} passed</span>
+        {% if r.failed + r.error %}<span class="badge b-failed">{{ r.failed + r.error }} failed</span>{% endif %}
+        {% if r.skipped %}<span class="badge b-skipped">{{ r.skipped }} skipped</span>{% endif %}
+      </div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Tasa de éxito</div>
+      <div class="value">{{ r.tasa_exito }}%</div>
+      <div class="meter"><span style="width: {{ r.tasa_exito }}%"></span></div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Cobertura de código</div>
+      <div class="value">{{ r.cobertura.total if r.cobertura.total is not none else "—" }}%</div>
+      <div class="meter" title="Umbral {{ r.umbral|int }}%">
+        <span style="width: {{ r.cobertura.total or 0 }}%"></span>
+        <i class="threshold" style="left: {{ r.umbral }}%"></i>
+      </div>
+      <div class="note">Línea negra = umbral {{ r.umbral|int }}% · <a href="/cobertura/" target="_blank">reporte HTML</a></div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Duración total</div>
+      <div class="value">{{ r.duracion }}s</div>
+      <div class="note">suma de tiempos por caso</div>
+    </div>
+  </section>
+
+  <!-- Pruebas por semana -->
+  <section>
+    <h2>Pruebas por clase</h2>
+    <div class="weeks">
+      {% for s in r.semanas %}
+      <details class="week" {% if s.fallidas %}open{% endif %}>
+        <summary>
+          <div>
+            <div class="wk-title"><span class="num">Semana {{ s.clave }}</span>{{ s.titulo }}</div>
+            <div class="wk-tech">{{ s.tecnica }} · <code>{{ s.modulo }}</code></div>
+          </div>
+          <div>
+            {% if s.total == 0 %}
+              <span class="badge b-skipped">sin ejecutar</span>
+            {% elif s.fallidas %}
+              <span class="badge b-failed">{{ s.fallidas }} / {{ s.total }} fallaron</span>
+            {% else %}
+              <span class="badge b-passed">{{ s.passed }} / {{ s.total }} passed</span>
+            {% endif %}
+          </div>
+          {% if s.total %}
+          <div class="stack" aria-hidden="true">
+            {% if s.passed %}<span class="s-pass" style="flex: {{ s.passed }}"></span>{% endif %}
+            {% if s.fallidas %}<span class="s-fail" style="flex: {{ s.fallidas }}"></span>{% endif %}
+            {% if s.skipped %}<span class="s-skip" style="flex: {{ s.skipped }}"></span>{% endif %}
+          </div>
+          {% endif %}
+        </summary>
+        {% if s.casos %}
+        <div class="wk-body">
+          <table>
+            <thead><tr><th>Prueba</th><th>Datos inyectados</th><th>Estado</th><th class="num">Tiempo</th></tr></thead>
+            <tbody>
+            {% for c in s.casos %}
+              <tr>
+                <td><code>{{ c.funcion }}</code><div class="muted" style="font-size:12px">{{ c.archivo }}</div></td>
+                <td>{% if c.parametros %}<code>{{ c.parametros }}</code>{% else %}<span class="muted">—</span>{% endif %}</td>
+                <td>
+                  <span class="badge b-{{ c.estado }}">{{ c.estado | upper }}</span>
+                  {% if c.detalle %}<pre class="fail">{{ c.detalle }}</pre>{% endif %}
+                </td>
+                <td class="num">{{ "%.3f" | format(c.tiempo) }}s</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </details>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <!-- Historial -->
+    <div class="card">
+      <h2>Historial de ejecuciones</h2>
+      {% if r.historial | length < 2 %}
+        <p class="muted">Se necesitan al menos 2 ejecuciones para dibujar la tendencia.</p>
+      {% else %}
+        <div class="legend">
+          <span><i style="background:var(--series-1)"></i>Tasa de éxito %</span>
+          <span><i style="background:var(--series-2)"></i>Cobertura %</span>
+        </div>
+        <div class="chart-wrap">
+          <svg id="hist" width="100%" height="220" role="img" aria-label="Historial de tasa de éxito y cobertura"></svg>
+          <div id="tooltip"></div>
+        </div>
+      {% endif %}
+      <details style="margin-top:12px">
+        <summary class="muted" style="cursor:pointer">Ver tabla</summary>
+        <table style="margin-top:8px">
+          <thead><tr><th>Fecha</th><th>Filtro</th><th class="num">Pruebas</th><th class="num">Éxito</th><th class="num">Cobertura</th><th>Gate</th></tr></thead>
+          <tbody>
+          {% for h in r.historial | reverse %}
+            <tr>
+              <td>{{ h.fecha | replace("T", " ") }}</td><td>{{ h.filtro }}</td>
+              <td class="num">{{ h.passed }}/{{ h.total }}</td>
+              <td class="num">{{ h.tasa_exito }}%</td>
+              <td class="num">{{ h.cobertura }}%</td>
+              <td><span class="badge {{ 'b-passed' if h.gate_aprobado else 'b-failed' }}">{{ "OK" if h.gate_aprobado else "FALLO" }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </details>
+    </div>
+
+    <!-- Cobertura por archivo -->
+    <div class="card">
+      <h2>Cobertura por módulo</h2>
+      <table>
+        <thead><tr><th>Archivo</th><th class="num">Cobertura</th><th>Líneas sin probar</th></tr></thead>
+        <tbody>
+        {% for f in r.cobertura.archivos %}
+          <tr>
+            <td><code>{{ f.archivo }}</code>
+              <div class="meter" style="margin-top:6px"><span style="width: {{ f.porcentaje }}%; background: {{ 'var(--series-1)' if f.porcentaje >= r.umbral else 'var(--critical)' }}"></span></div>
+            </td>
+            <td class="num">{{ f.porcentaje }}%</td>
+            <td>{% if f.faltantes %}<code>{{ f.faltantes | join(", ") }}</code>{% else %}<span class="muted">ninguna</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  <section id="console-box" class="card" style="display:none">
+    <h2>Salida de la última ejecución</h2>
+    <pre class="console" id="console"></pre>
+  </section>
+</div>
+
+<script>
+(function () {
+  const btn = document.getElementById("run");
+  const sel = document.getElementById("filtro");
+  try { const f = localStorage.getItem("filtro"); if (f) sel.value = f; } catch (e) {}
+
+  async function poll() {
+    const r = await fetch("/api/estado").then(x => x.json());
+    if (r.corriendo) { setTimeout(poll, 1000); return; }
+    location.reload();
+  }
+
+  btn.addEventListener("click", async () => {
+    try { localStorage.setItem("filtro", sel.value); } catch (e) {}
+    btn.disabled = true; btn.textContent = "Ejecutando…";
+    const res = await fetch("/api/ejecutar", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({filtro: sel.value})
+    });
+    if (res.status === 409 || res.ok) { poll(); }
+    else { btn.disabled = false; btn.textContent = "▶ Ejecutar pruebas"; alert((await res.json()).detail); }
+  });
+
+  fetch("/api/estado").then(x => x.json()).then(r => {
+    if (r.corriendo) { btn.disabled = true; btn.textContent = "Ejecutando…"; poll(); }
+    if (r.salida) {
+      document.getElementById("console-box").style.display = "block";
+      document.getElementById("console").textContent = r.salida;
+    }
+  });
+
+  // --- Gráfico de historial (SVG, un solo eje 0–100 %) ---
+  const data = {{ r.historial | tojson }};
+  const svg = document.getElementById("hist");
+  if (!svg || data.length < 2) return;
+  const tip = document.getElementById("tooltip");
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+  function draw() {
+    svg.innerHTML = "";
+    const W = svg.clientWidth, H = 220, m = {t: 10, r: 12, b: 24, l: 36};
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const x = i => m.l + (data.length === 1 ? iw / 2 : i * iw / (data.length - 1));
+    const y = v => m.t + ih - (v / 100) * ih;
+    const css = getComputedStyle(document.documentElement);
+    const c = n => css.getPropertyValue(n).trim();
+
+    [0, 50, 80, 100].forEach(v => {
+      svg.appendChild(el("line", {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c(v === 80 ? "--text-muted" : "--grid"), "stroke-dasharray": v === 80 ? "4 4" : "", "stroke-width": 1}));
+      const t = el("text", {x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: c("--text-muted")});
+      t.textContent = v + "%"; svg.appendChild(t);
+    });
+
+    const series = [["tasa_exito", "--series-1"], ["cobertura", "--series-2"]];
+    series.forEach(([key, color]) => {
+      const pts = data.map((d, i) => `${x(i)},${y(d[key] ?? 0)}`).join(" ");
+      svg.appendChild(el("polyline", {points: pts, fill: "none", stroke: c(color), "stroke-width": 2, "stroke-linejoin": "round"}));
+      data.forEach((d, i) => svg.appendChild(el("circle", {cx: x(i), cy: y(d[key] ?? 0), r: 4, fill: c(color), stroke: c("--surface-1"), "stroke-width": 2})));
+    });
+
+    const cross = el("line", {y1: m.t, y2: m.t + ih, stroke: c("--text-muted"), "stroke-width": 1, visibility: "hidden"});
+    svg.appendChild(cross);
+    const hit = el("rect", {x: m.l, y: m.t, width: iw, height: ih, fill: "transparent"});
+    svg.appendChild(hit);
+    hit.addEventListener("mousemove", ev => {
+      const bx = svg.getBoundingClientRect();
+      const i = Math.max(0, Math.min(data.length - 1, Math.round((ev.clientX - bx.left - m.l) / (iw / (data.length - 1)))));
+      const d = data[i];
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+      tip.innerHTML = `<strong>${d.fecha.replace("T", " ")}</strong><br>Filtro: ${d.filtro}<br>` +
+        `<span style="color:var(--series-1)">●</span> Éxito: ${d.tasa_exito}% (${d.passed}/${d.total})<br>` +
+        `<span style="color:var(--series-2)">●</span> Cobertura: ${d.cobertura}%<br>Gate: ${d.gate_aprobado ? "✔ aprobado" : "✖ rechazado"}`;
+      tip.style.display = "block";
+      const left = x(i) + 12 + tip.offsetWidth > W ? x(i) - tip.offsetWidth - 12 : x(i) + 12;
+      tip.style.left = left + "px"; tip.style.top = "10px";
+    });
+    hit.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+  }
+  draw();
+  window.addEventListener("resize", draw);
+})();
+</script>
+</body>
+</html>
