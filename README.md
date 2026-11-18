@@ -77,16 +77,19 @@ Final_Devops/
 
 `python -m uvicorn dashboard.app:app --port 8090` → http://localhost:8090
 
-| Sección | Qué muestra | Semanas |
-|---|---|---|
-| Encabezado | Selector de semana y botón **Ejecutar pruebas** (todas o solo una semana) | 1–10 |
-| Indicadores | Quality Gate (aprobado/rechazado y sus 3 condiciones), total de pruebas, tasa de éxito, cobertura con línea del 80% y hallazgos de linter | 3, 7 |
-| Pruebas por clase | Una tarjeta por semana con cada caso, los datos inyectados (parametrize), estado, tiempo y el mensaje de error si falla | 1–10 |
-| Análisis estático | Hallazgos de flake8 por archivo, línea y regla | 7 |
-| Prueba de carga | Controles de usuarios/ritmo/duración, tabla por endpoint (mediana, promedio, p95, p99, RPS), gráficas de RPS y latencia, enlace al reporte HTML de Locust | 8 |
-| Despliegue continuo | 3 escenarios (sano, bug HTTP 500, servidor caído), historial de promociones y rollbacks, token enmascarado y si se envió la alerta a Telegram | 9 |
-| Infraestructura | Estado de LocalStack, buckets S3 y colas SQS existentes, botón para aprovisionar | 10 |
-| Historial y cobertura | Tendencia de éxito y cobertura entre ejecuciones; cobertura por módulo con las líneas sin probar y enlace al reporte HTML | 3 |
+La página está organizada en el mismo orden en que se expone el proyecto:
+
+| Sección | Qué muestra |
+|---|---|
+| Barra superior | Selector de semana, botón **Ejecutar pruebas** y navegación a cada bloque |
+| Resumen | Veredicto del **Quality Gate** con sus 3 condiciones, guía "Cómo leer este tablero", indicadores (pruebas, tasa de éxito, cobertura, hallazgos, duración) y el **Flujo DevOps** con el estado de sus 8 etapas |
+| Semanas 1-3 · Fundamentos de pruebas (expone Diego) | Tarjetas de las semanas 1 a 3 y la tabla de **cobertura por módulo** con las líneas sin probar |
+| Semanas 4-6 · Contenedores e integración continua (expone Jhoan) | Tarjetas de las semanas 4 a 6 y la tabla de workflows de GitHub Actions con enlace a sus ejecuciones |
+| Semanas 7-10 · Calidad, rendimiento y entrega (expone Edison) | Hallazgos de flake8, prueba de carga con Locust (tabla y gráficas), pipeline de despliegue con sus 3 escenarios e infraestructura en LocalStack |
+| Historial | Tendencia de tasa de éxito y cobertura entre ejecuciones, con tabla detallada |
+
+Cada tarjeta de semana tiene el mismo formato: **Qué demuestra**, **Cómo leer el resultado**, el código
+y el comando para ejecutarla, su panel de resultados y la lista desplegable de sus pruebas.
 
 Para que los botones de despliegue envíen alertas, define las variables de Telegram (ver Semana 9) en la
 misma terminal antes de arrancar el dashboard.
@@ -184,7 +187,7 @@ de variables de entorno / GitHub Secrets). Si falta, el pipeline funciona igual 
 6. En GitHub: **Settings → Secrets and variables → Actions → New repository secret** y crea tres secretos:
    `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` y `API_SECRET_KEY` (cualquier clave, p. ej. `clave_final_2026`).
 7. **Actions → Pipeline Despliegue Continuo (CD) → Run workflow** tres veces, con `caido`, `exitoso`
-   y `fallo`. Llegan 3 alertas: 🚨 servidor inaccesible, 🚀 despliegue exitoso y 🚨 rollback.
+   y `fallo`. Llegan 3 alertas: servidor inaccesible, despliegue exitoso y rollback automático.
 8. Desde el PC, **reemplazando** los valores de ejemplo por los reales (sin `< >`):
 
    ```powershell
@@ -241,7 +244,7 @@ El despliegue tiene el suyo: el Smoke Test en Staging debe responder HTTP 200.
 | 6 | cualquiera de los anteriores + `git push` | el pipeline de GitHub Actions se pone rojo y el CD no se dispara |
 | 7 | agregar a `calculadora.py` una variable sin uso (`descuento_fantasma = 0.10`) | flake8 `F841` → Quality Gate rechazado |
 | 8 | subir `RETARDO_SLOW_SEGUNDOS` a `2` en `semana8/api.py` | prueba de carga: p95 de `/slow` supera el umbral |
-| 9 | `IS_HEALTHY = False` en `semana9/main.py` | Smoke Test HTTP 500 → rollback automático y alerta 🚨 |
+| 9 | `IS_HEALTHY = False` en `semana9/main.py` | Smoke Test HTTP 500 → rollback automático y alerta en Telegram |
 | 10 | apagar LocalStack (`docker compose --profile iac down`) | el dashboard muestra "LocalStack no disponible" y las pruebas de integración se omiten |
 
 Después de cada cambio, pulsa **Ejecutar pruebas**, **Lanzar enjambre** o **Ejecutar pipeline CD** en el
