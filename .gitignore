@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+venv/
+.venv/
+
+# Reportes generados (se regeneran con scripts/run_tests.py)
+reports/*
+!reports/.gitkeep
