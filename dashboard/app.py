@@ -20,6 +20,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from dashboard import reports
+from src.semana10 import init_infra
 
 BASE = Path(__file__).resolve().parent
 app = FastAPI(title="Dashboard de Calidad — Pruebas y Mantenimiento")
@@ -38,6 +39,10 @@ _lock = threading.Lock()
 
 class RunRequest(BaseModel):
     filtro: str = "todas"
+
+
+class DeployRequest(BaseModel):
+    escenario: str = "exitoso"
 
 
 class LoadRequest(BaseModel):
@@ -111,6 +116,35 @@ def carga(body: LoadRequest):
     _lanzar("carga", cmd)
     return {"mensaje": "Prueba de carga iniciada", "usuarios": body.usuarios, "ritmo": body.ritmo,
             "duracion": body.duracion}
+
+
+@app.post("/api/despliegue", status_code=202)
+def despliegue(body: DeployRequest):
+    if body.escenario not in ("exitoso", "fallo", "caido"):
+        raise HTTPException(status_code=400, detail=f"Escenario inválido: {body.escenario}")
+    cmd = [sys.executable, str(reports.ROOT / "scripts" / "run_deploy.py"), "--escenario", body.escenario]
+    _lanzar("despliegue", cmd)
+    return {"mensaje": "Pipeline de CD iniciado", "escenario": body.escenario}
+
+
+def _iac(aprovisionar: bool) -> dict:
+    try:
+        s3, sqs = init_infra.crear_cliente("s3"), init_infra.crear_cliente("sqs")
+        if aprovisionar:
+            init_infra.aprovisionar(s3, sqs)
+        return {"disponible": True, "endpoint": init_infra.LOCALSTACK_ENDPOINT, **init_infra.inventario(s3, sqs)}
+    except Exception as error:  # LocalStack apagado o inaccesible
+        return {"disponible": False, "endpoint": init_infra.LOCALSTACK_ENDPOINT, "error": type(error).__name__}
+
+
+@app.get("/api/iac")
+def iac_estado():
+    return _iac(aprovisionar=False)
+
+
+@app.post("/api/iac/aprovisionar")
+def iac_aprovisionar():
+    return _iac(aprovisionar=True)
 
 
 @app.get("/health")

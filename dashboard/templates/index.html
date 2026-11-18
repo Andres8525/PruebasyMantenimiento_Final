@@ -140,7 +140,7 @@
   <header>
     <div>
       <h1>Dashboard de Calidad</h1>
-      <p class="sub">Pruebas y Mantenimiento de Software · Proyecto Final DevOps · Semanas 1 a 8</p>
+      <p class="sub">Pruebas y Mantenimiento de Software · Proyecto Final DevOps · Semanas 1 a 10</p>
       <p class="muted" style="margin:4px 0 0;font-size:13px">
         {% if r.meta %}Última ejecución: {{ r.meta.fecha | replace("T", " ") }} · modo {{ r.meta.modo }} · filtro {{ r.meta.filtro }}{% else %}Sin ejecuciones todavía{% endif %}
       </p>
@@ -358,6 +358,71 @@
     {% endif %}
   </section>
 
+
+  <!-- Despliegue continuo -->
+  <section class="card">
+    <div class="section-head">
+      <h2>Despliegue continuo · Semana 9 (CD)</h2>
+      <div class="controls">
+        <label for="escenario" class="muted">Escenario</label>
+        <select id="escenario">
+          <option value="exitoso">A · Staging sano (HTTP 200)</option>
+          <option value="fallo">B · Bug en Staging (HTTP 500)</option>
+          <option value="caido">Servidor inaccesible</option>
+        </select>
+        <button id="run-deploy" class="primary">▶ Ejecutar pipeline CD</button>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:0">Commit → Pipeline CD → Staging Gate → Smoke Test → Promoción / Rollback → Notificación Telegram. El token del secreto siempre se muestra enmascarado.</p>
+    {% if not r.despliegues %}
+      <p class="muted">Aún no hay despliegues. Elige un escenario y pulsa <strong>Ejecutar pipeline CD</strong>, o corre <code>python scripts/run_deploy.py</code>.</p>
+    {% else %}
+      {% set ultimo = r.despliegues[-1] %}
+      <div class="kpis">
+        <div class="card kpi">
+          <div class="label">Último despliegue</div>
+          {% if ultimo.resultado == "PROMOCIONADO" %}<div class="gate ok"><span class="ico">🚀</span>PRODUCCIÓN</div>
+          {% else %}<div class="gate ko"><span class="ico">↩</span>ROLLBACK</div>{% endif %}
+          <div class="note">{{ ultimo.detalle }} · {{ ultimo.fecha | replace("T", " ") }}</div>
+        </div>
+        <div class="card kpi"><div class="label">Promociones</div><div class="value">{{ r.despliegues | selectattr("resultado", "equalto", "PROMOCIONADO") | list | length }}</div><div class="note">de {{ r.despliegues | length }} ejecuciones</div></div>
+        <div class="card kpi"><div class="label">Rollbacks automáticos</div><div class="value">{{ r.despliegues | rejectattr("resultado", "equalto", "PROMOCIONADO") | list | length }}</div><div class="note">fallos aislados en Staging</div></div>
+        <div class="card kpi"><div class="label">Alertas Telegram</div><div class="value">{{ r.despliegues | selectattr("telegram") | list | length }}</div><div class="note">notificaciones entregadas</div></div>
+      </div>
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead><tr><th>Fecha</th><th>Escenario</th><th>Origen</th><th class="num">HTTP</th><th>Resultado</th><th>Token</th><th>Telegram</th></tr></thead>
+          <tbody>
+          {% for d in r.despliegues | reverse %}
+            <tr>
+              <td>{{ d.fecha | replace("T", " ") }}</td>
+              <td>{{ d.escenario }}</td>
+              <td>{{ d.origen }}</td>
+              <td class="num">{{ d.http if d.http is not none else "—" }}</td>
+              <td><span class="badge {{ 'b-passed' if d.resultado == 'PROMOCIONADO' else 'b-failed' }}">{{ d.resultado | replace("_", " ") }}</span></td>
+              <td><code>{{ d.token }}</code></td>
+              <td>{{ "✔ enviado" if d.telegram else "—" }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Infraestructura como código -->
+  <section class="card">
+    <div class="section-head">
+      <h2>Infraestructura como código · Semana 10 (LocalStack)</h2>
+      <div class="controls">
+        <button id="iac-refresh">↻ Consultar</button>
+        <button id="iac-run" class="primary">▶ Aprovisionar S3 + SQS</button>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:0">Levanta la nube local con <code>docker compose --profile iac up -d localstack</code>. El aprovisionamiento es idempotente: ejecutarlo 1 o 100 veces deja el mismo estado.</p>
+    <div id="iac-box" class="muted">Consultando LocalStack…</div>
+  </section>
+
   {% if r.hay_datos %}
   <section class="grid-2">
     <!-- Historial -->
@@ -428,13 +493,13 @@
 
 <script>
 (function () {
-  const btns = [document.getElementById("run"), document.getElementById("run-load")];
+  const btns = [document.getElementById("run"), document.getElementById("run-load"), document.getElementById("run-deploy")];
   const sel = document.getElementById("filtro");
   try { const f = localStorage.getItem("filtro"); if (f) sel.value = f; } catch (e) {}
 
   function ocupado(tipo) {
     btns.forEach(b => b.disabled = true);
-    (tipo === "carga" ? btns[1] : btns[0]).textContent = "Ejecutando…";
+    ({carga: btns[1], despliegue: btns[2]}[tipo] || btns[0]).textContent = "Ejecutando…";
   }
   async function poll() {
     const r = await fetch("/api/estado").then(x => x.json());
@@ -459,12 +524,38 @@
     lanzar("/api/carga", {usuarios: n("usuarios"), ritmo: n("ritmo"), duracion: n("duracion")}, "carga");
   });
 
+  btns[2].addEventListener("click", () => {
+    lanzar("/api/despliegue", {escenario: document.getElementById("escenario").value}, "despliegue");
+  });
+
+  // --- Semana 10: estado de LocalStack ---
+  const iacBox = document.getElementById("iac-box");
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  function pintarIac(d) {
+    if (!d.disponible) {
+      iacBox.innerHTML = `<span class="badge b-failed">LocalStack no disponible</span> <span class="muted">en <code>${esc(d.endpoint)}</code> (${esc(d.error)})</span>`;
+      return;
+    }
+    const lista = xs => xs.length ? xs.map(x => `<code>${esc(x)}</code>`).join(" ") : '<span class="muted">ninguno</span>';
+    iacBox.innerHTML = `<span class="badge b-passed">LocalStack activo</span> <span class="muted"><code>${esc(d.endpoint)}</code></span>` +
+      `<div class="table-wrap" style="margin-top:12px"><table><tbody>` +
+      `<tr><td>Buckets S3</td><td>${lista(d.buckets)}</td></tr>` +
+      `<tr><td>Colas SQS</td><td>${lista(d.colas)}</td></tr></tbody></table></div>`;
+  }
+  async function iac(metodo, url) {
+    iacBox.textContent = "Consultando LocalStack…";
+    pintarIac(await fetch(url, {method: metodo}).then(x => x.json()));
+  }
+  document.getElementById("iac-refresh").addEventListener("click", () => iac("GET", "/api/iac"));
+  document.getElementById("iac-run").addEventListener("click", () => iac("POST", "/api/iac/aprovisionar"));
+  iac("GET", "/api/iac");
+
   fetch("/api/estado").then(x => x.json()).then(r => {
     if (r.corriendo) { ocupado(r.tipo); poll(); }
     if (r.salida) {
       document.getElementById("console-box").style.display = "block";
       document.getElementById("console-title").textContent =
-        "Salida de la última ejecución (" + (r.tipo === "carga" ? "prueba de carga" : "pruebas") + ")";
+        "Salida de la última ejecución (" + ({carga: "prueba de carga", despliegue: "pipeline CD"}[r.tipo] || "pruebas") + ")";
       document.getElementById("console").textContent = r.salida;
     }
   });

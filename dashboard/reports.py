@@ -1,6 +1,6 @@
 """Lectura de los reportes generados por Pytest (JUnit XML + coverage JSON),
-flake8 (Semana 7) y Locust (Semana 8), más el historial de ejecuciones.
-Lo usan scripts/run_tests.py, scripts/run_load_test.py y el dashboard.
+flake8 (Semana 7), Locust (Semana 8) y el pipeline de CD (Semana 9), más el historial de ejecuciones.
+Lo usan los scripts de scripts/ y el dashboard.
 """
 
 from __future__ import annotations
@@ -24,6 +24,9 @@ HISTORY_FILE = REPORTS_DIR / "history.json"
 LOAD_DIR = REPORTS_DIR / "carga"
 LOAD_SUMMARY = LOAD_DIR / "summary.json"
 LOAD_HTML = LOAD_DIR / "locust.html"
+
+DEPLOY_DIR = REPORTS_DIR / "despliegue"
+DEPLOY_HISTORY = DEPLOY_DIR / "historial.json"
 
 COVERAGE_THRESHOLD = 80.0
 HISTORY_LIMIT = 50
@@ -73,6 +76,16 @@ SEMANAS = {
         "titulo": "Pruebas de Carga con Locust",
         "tecnica": "Enjambre de usuarios concurrentes, latencia y RPS",
         "modulo": "src/semana8/api.py",
+    },
+    "9": {
+        "titulo": "Despliegue Continuo (CD)",
+        "tecnica": "Smoke Test en Staging, rollback automático, secrets y Telegram",
+        "modulo": "src/semana9/",
+    },
+    "10": {
+        "titulo": "Infraestructura como Código (IaC)",
+        "tecnica": "Docker Compose + LocalStack (S3 y SQS), aprovisionamiento idempotente",
+        "modulo": "src/semana10/init_infra.py",
     },
 }
 
@@ -166,6 +179,15 @@ def load_load_summary() -> dict | None:
         return None
 
 
+def load_deploys() -> list[dict]:
+    if not DEPLOY_HISTORY.exists():
+        return []
+    try:
+        return json.loads(DEPLOY_HISTORY.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+
+
 def build_summary() -> dict:
     """Resumen completo de la última ejecución, listo para el dashboard."""
     casos = parse_junit()
@@ -219,6 +241,7 @@ def build_summary() -> dict:
         "semanas": semanas,
         "historial": load_history(),
         "carga": load_load_summary(),
+        "despliegues": load_deploys(),
     }
 
 
