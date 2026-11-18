@@ -2,10 +2,10 @@
 
 Universidad Cooperativa de Colombia · Docente: Mg. Gabriel Guerrero Arellano
 
-Este proyecto reúne en un solo repositorio **todos los laboratorios de la materia (Semanas 1 a 8)**.
+Este proyecto reúne en un solo repositorio **todos los laboratorios de la materia (Semanas 1 a 10)**.
 Incluye un **Dashboard de Calidad** donde se ven todas las pruebas de cada clase, la
-cobertura de código, el análisis estático, la prueba de carga con Locust, el Quality Gate y el
-historial de ejecuciones.
+cobertura de código, el análisis estático, la prueba de carga con Locust, los despliegues continuos
+(promoción / rollback), la infraestructura en LocalStack, el Quality Gate y el historial de ejecuciones.
 
 ## Qué se vio en cada clase
 
@@ -19,6 +19,8 @@ historial de ejecuciones.
 | 6 | Integración Continua con GitHub Actions | `src/semana6/main.py` | `tests/semana6/`, `.github/workflows/ci.yml` |
 | 7 | Análisis estático: flake8 + SonarCloud, acciones fijadas por SHA | `src/semana7/calculadora.py` | `tests/semana7/`, `.flake8`, `sonar-project.properties`, `.github/workflows/sonar.yml` |
 | 8 | Pruebas de carga con Locust (latencia, RPS, cuello de botella) | `src/semana8/api.py` | `tests/semana8/`, `load/locustfile.py`, `scripts/run_load_test.py` |
+| 9 | Despliegue Continuo: Smoke Test en Staging, rollback automático, secrets, alertas a Telegram | `src/semana9/main.py`, `src/semana9/deploy.py` | `tests/semana9/`, `scripts/run_deploy.py`, `.github/workflows/cd.yml` |
+| 10 | Infraestructura como Código con Docker Compose + LocalStack (S3 y SQS) | `src/semana10/init_infra.py` | `tests/semana10/`, servicio `localstack` en `docker-compose.yml` |
 
 ## Estructura
 
@@ -34,11 +36,13 @@ Final_Devops/
 │   └── templates/index.html
 ├── scripts/
 │   ├── run_tests.py          # pruebas + linter + Quality Gate + reportes
-│   └── run_load_test.py      # prueba de carga headless con Locust
+│   ├── run_load_test.py      # prueba de carga headless con Locust
+│   └── run_deploy.py         # pipeline de CD: Staging -> promoción / rollback
 ├── docker/                   # api.Dockerfile · qa.Dockerfile (qa-runner)
-├── docker-compose.yml        # api-service + test-runner + dashboard (+ perfil "carga")
+├── docker-compose.yml        # api-service + test-runner + dashboard (+ perfiles "carga" e "iac")
 ├── .github/workflows/
-│   ├── ci.yml                # Semana 6: build-and-test, contenedores y carga
+│   ├── ci.yml                # Semana 6: build-and-test, contenedores, carga e IaC
+│   ├── cd.yml                # Semana 9: despliegue continuo con rollback
 │   └── sonar.yml             # Semana 7: Quality Gate de SonarCloud
 ├── sonar-project.properties · .flake8 · pytest.ini · .coveragerc · requirements.txt
 └── reports/                  # salida generada (no se versiona)
@@ -95,7 +99,71 @@ docker compose down
 2. **pruebas-contenedores**: levanta la API y el test-runner con Docker Compose.
 3. **pruebas-carga**: enjambre corto de Locust (50 usuarios, 20 s) y publica el reporte.
 
+4. **infraestructura-iac**: levanta LocalStack como servicio, aprovisiona dos veces (idempotencia) y prueba S3/SQS.
+
 Los reportes quedan como *artifacts* del run en la pestaña **Actions**.
+
+## Despliegue Continuo (Semana 9)
+
+`cd.yml` se ejecuta **solo cuando el CI de `main` termina en verde** (ningún cambio llega a Producción sin
+pasar por Staging). También se lanza a mano: **Actions → Pipeline Despliegue Continuo (CD) → Run workflow**,
+eligiendo el escenario.
+
+```powershell
+python scripts/run_deploy.py --escenario exitoso   # Caso A: HTTP 200 -> promoción a Producción
+python scripts/run_deploy.py --escenario fallo     # Caso B: HTTP 500 -> rollback automático
+python scripts/run_deploy.py --escenario caido     # Staging apagado -> rollback por conexión
+```
+
+Cada ejecución levanta un Staging **nuevo** (otro proceso), así siempre corre la última versión del código:
+es lo mismo que en clase se lograba con `--reload`. El laboratorio original también funciona:
+
+```powershell
+python -m uvicorn src.semana9.main:app --port 8001 --reload   # terminal 1
+python -m src.semana9.deploy                                  # terminal 2
+```
+
+### Alertas a Telegram desde el celular
+
+El token del bot **nunca va en el código** (en la diapositiva aparece escrito en `deploy.py`; aquí se lee
+de variables de entorno / GitHub Secrets). Si falta, el pipeline funciona igual y omite la alerta.
+
+1. En Telegram, busca **@BotFather** (insignia azul) → **Iniciar** → envía `/newbot`.
+2. Nombre del bot, por ejemplo `DevOps Deploy Bot`. Usuario: debe terminar en `bot`, por ejemplo `ucc_final_deploy_bot`.
+3. BotFather responde con el **token** (`1234567890:AA...`). Cópialo; es la contraseña del bot.
+4. Toca el enlace `t.me/<tu_bot>` que te dio BotFather y pulsa **Iniciar**. Sin este paso el bot no puede escribirte.
+5. Busca **@userinfobot** → **Iniciar**: te responde con tu **Id** numérico. Ese es el `TELEGRAM_CHAT_ID`.
+6. En el navegador del celular abre el repo en GitHub (modo escritorio si no ves el menú) →
+   **Settings → Secrets and variables → Actions → New repository secret** y crea tres secretos:
+   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` y `API_SECRET_KEY` (cualquier clave, p. ej. `clave_final_2026`).
+7. Prueba: **Actions → Pipeline Despliegue Continuo (CD) → Run workflow** tres veces, con `caido`, `exitoso`
+   y `fallo`. Deben llegarte las 3 alertas: 🚨 servidor inaccesible, 🚀 despliegue exitoso y 🚨 rollback.
+8. Para probar desde el PC (y verlo en el dashboard):
+
+   ```powershell
+   $env:TELEGRAM_BOT_TOKEN = "<token>"; $env:TELEGRAM_CHAT_ID = "<id>"
+   python scripts/run_deploy.py --escenario exitoso
+   ```
+
+   Para que el botón del dashboard también notifique, define esas variables en la misma terminal antes de
+   arrancar `uvicorn dashboard.app:app`.
+
+Si el token llega a quedar expuesto: en @BotFather → `/revoke` → elige el bot → actualiza el secreto.
+
+## Infraestructura como Código (Semana 10)
+
+```powershell
+docker compose --profile iac up -d localstack     # nube AWS emulada en el puerto 4566
+docker ps                                         # localstack_lab10 en estado Up
+python -m src.semana10.init_infra                 # crea mi-bucket-pruebas y cola-notificaciones
+python -m src.semana10.init_infra                 # idempotente: mismo resultado ("existente")
+docker compose --profile iac down                 # destruye la nube sin dejar rastros
+```
+
+Con LocalStack arriba, las pruebas de integración de `tests/semana10` dejan de omitirse y hacen un viaje
+completo por S3 (subir/leer un objeto) y SQS (enviar/recibir un mensaje). El dashboard muestra los buckets y
+colas existentes y tiene un botón para aprovisionar. Se omitió `version: '3.8'` del manifiesto porque
+Docker Compose v2 lo marca como obsoleto.
 
 ## SonarCloud (Semana 7)
 
@@ -131,5 +199,6 @@ la cobertura cae a ~20% y el Gate queda **RECHAZADO**.
 | 5 | `"active": True` → `"active": "SI"` en `main.py` | `test_get_users_schema_validation` |
 | 7 | agregar a `calculadora.py` una variable sin uso (`descuento_fantasma = 0.10`) | flake8 `F841` → Quality Gate rechazado |
 | 8 | subir `RETARDO_SLOW_SEGUNDOS` a `2` en `semana8/api.py` | prueba de carga: p95 de `/slow` supera el umbral |
+| 9 | `IS_HEALTHY = False` en `semana9/main.py` | Smoke Test HTTP 500 → rollback automático y alerta 🚨 |
 
 Después de cada cambio, pulsa **Ejecutar pruebas** (o **Lanzar enjambre**) en el dashboard y verás el fallo con su mensaje.
