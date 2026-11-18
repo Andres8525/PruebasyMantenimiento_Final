@@ -7,499 +7,642 @@
 <style>
   :root {
     color-scheme: light;
-    --surface-0: #f4f4f2;
-    --surface-1: #fcfcfb;
-    --border: #e2e1dc;
-    --text-primary: #0b0b0b;
-    --text-secondary: #52514e;
-    --text-muted: #7a7974;
-    --grid: #e8e7e2;
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #f8f9fb;
+    --border: #e2e5ea;
+    --border-strong: #cfd4dc;
+    --text: #111827;
+    --text-2: #4b5563;
+    --muted: #6b7280;
+    --grid: #eceef2;
+    --accent: #1f5fbf;
+    --accent-soft: #e8effa;
     --series-1: #2a78d6;
     --series-2: #eb6834;
-    --good: #0ca30c;
-    --warning: #fab219;
-    --critical: #d03b3b;
-    --good-bg: #e6f4e6;
-    --critical-bg: #fbe9e9;
-    --accent: #2a78d6;
-    --code-bg: #f0efeb;
+    --good: #0f7a3a;
+    --good-bg: #e7f4ec;
+    --good-mark: #0ca30c;
+    --bad: #b42318;
+    --bad-bg: #fdecea;
+    --bad-mark: #d03b3b;
+    --pend: #4b5563;
+    --pend-bg: #eef0f3;
+    --warn-mark: #fab219;
+    --code-bg: #f1f3f6;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .05);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --surface-0: #121211;
-      --surface-1: #1a1a19;
-      --border: #2e2e2c;
-      --text-primary: #f0efec;
-      --text-secondary: #c3c2b7;
-      --text-muted: #8f8e86;
-      --grid: #2a2a28;
-      --series-1: #3987e5;
-      --series-2: #d95926;
-      --good-bg: #16301a;
-      --critical-bg: #3a1c1c;
-      --accent: #3987e5;
-      --code-bg: #232321;
+      --bg: #111214; --surface: #1a1b1e; --surface-2: #202125; --border: #2c2e33; --border-strong: #3a3d43;
+      --text: #f0f1f3; --text-2: #c4c7cd; --muted: #8e939b; --grid: #2a2c31;
+      --accent: #5b9bf0; --accent-soft: #1d2a3d; --series-1: #3987e5; --series-2: #d95926;
+      --good: #4cc77a; --good-bg: #16301f; --bad: #f08a80; --bad-bg: #3a1c1b; --pend: #c4c7cd; --pend-bg: #2a2c31;
+      --code-bg: #24262b; --shadow: none;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --surface-0: #121211;
-    --surface-1: #1a1a19;
-    --border: #2e2e2c;
-    --text-primary: #f0efec;
-    --text-secondary: #c3c2b7;
-    --text-muted: #8f8e86;
-    --grid: #2a2a28;
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --good-bg: #16301a;
-    --critical-bg: #3a1c1c;
-    --accent: #3987e5;
-    --code-bg: #232321;
+    --bg: #111214; --surface: #1a1b1e; --surface-2: #202125; --border: #2c2e33; --border-strong: #3a3d43;
+    --text: #f0f1f3; --text-2: #c4c7cd; --muted: #8e939b; --grid: #2a2c31;
+    --accent: #5b9bf0; --accent-soft: #1d2a3d; --series-1: #3987e5; --series-2: #d95926;
+    --good: #4cc77a; --good-bg: #16301f; --bad: #f08a80; --bad-bg: #3a1c1b; --pend: #c4c7cd; --pend-bg: #2a2c31;
+    --code-bg: #24262b; --shadow: none;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--surface-0); color: var(--text-primary);
-    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  html { scroll-behavior: smooth; scroll-padding-top: 120px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  a { color: var(--accent); }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+
+  /* Barra superior */
+  .topbar { position: sticky; top: 0; z-index: 10; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .topbar-inner { max-width: 1240px; margin: 0 auto; padding: 14px 16px 0; }
+  .topbar-row { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+  .brand h1 { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -.01em; }
+  .brand p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  .nav { display: flex; gap: 4px; overflow-x: auto; margin-top: 10px; }
+  .nav a { flex: none; padding: 8px 12px; font-size: 13px; color: var(--text-2); text-decoration: none; border-bottom: 2px solid transparent; }
+  .nav a:hover { color: var(--text); border-bottom-color: var(--border-strong); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .controls label { font-size: 12.5px; color: var(--text-2); display: inline-flex; gap: 6px; align-items: center; }
+  select, input[type=number], .btn {
+    font: inherit; font-size: 13px; height: 34px; padding: 0 12px; border-radius: 6px;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text);
   }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
-  header { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
-  h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; }
-  h2 { font-size: 18px; margin: 0 0 12px; }
-  h3 { font-size: 15px; margin: 0 0 8px; }
-  .sub { color: var(--text-secondary); margin: 4px 0 0; }
-  .muted { color: var(--text-muted); }
-  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  section { margin-top: 24px; }
-  .section-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
-  .section-head h2 { margin: 0; }
+  input[type=number] { width: 84px; }
+  .btn { cursor: pointer; font-weight: 600; }
+  .btn:hover { background: var(--surface-2); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent); filter: brightness(1.08); }
+  .btn:disabled { opacity: .6; cursor: progress; }
 
-  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .controls label { font-size: 13px; }
-  select, button, input[type=number] {
-    font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--surface-1); color: var(--text-primary);
-  }
-  input[type=number] { width: 90px; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
-  button:disabled { opacity: .6; cursor: progress; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 24px 16px 64px; }
+  .eyebrow { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  h2 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+  h3 { font-size: 15px; margin: 0; }
+  h4 { font-size: 13px; margin: 0 0 8px; color: var(--text-2); font-weight: 600; }
+  .muted { color: var(--muted); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); }
+  .pad { padding: 18px 20px; }
+  section.block { margin-top: 36px; }
+  .block-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .owner { font-size: 12.5px; color: var(--text-2); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; }
 
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-  .kpi .label { color: var(--text-secondary); font-size: 13px; }
-  .kpi .value { font-size: 30px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  .kpi .note { color: var(--text-muted); font-size: 13px; }
-  .meter { height: 8px; background: var(--grid); border-radius: 4px; overflow: hidden; margin-top: 8px; position: relative; }
-  .meter > span { display: block; height: 100%; background: var(--series-1); border-radius: 4px; }
-  .meter .threshold { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text-primary); }
+  /* Estados */
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .s-ok, .s-passed { color: var(--good); background: var(--good-bg); }
+  .s-fallo, .s-failed, .s-error { color: var(--bad); background: var(--bad-bg); }
+  .s-pendiente, .s-skipped { color: var(--pend); background: var(--pend-bg); }
 
-  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
-  .badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-  .b-passed { color: var(--good); background: var(--good-bg); }
-  .b-failed, .b-error { color: var(--critical); background: var(--critical-bg); }
-  .b-skipped { color: var(--text-secondary); background: var(--code-bg); }
-  .gate { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; }
-  .gate.ok { color: var(--good); } .gate.ko { color: var(--critical); }
-  .gate .ico { font-size: 24px; }
-  .checks { list-style: none; padding: 0; margin: 6px 0 0; font-size: 13px; color: var(--text-secondary); }
-  .checks .ok { color: var(--good); font-weight: 700; } .checks .ko { color: var(--critical); font-weight: 700; }
+  /* Resumen */
+  .intro { display: grid; gap: 12px; grid-template-columns: 1fr; margin-bottom: 16px; }
+  @media (min-width: 900px) { .intro { grid-template-columns: 2fr 3fr; } }
+  .verdict { display: flex; gap: 16px; align-items: center; }
+  .verdict-mark { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .verdict-mark svg { width: 28px; height: 28px; }
+  .verdict.ok .verdict-mark { background: var(--good-bg); color: var(--good); }
+  .verdict.ko .verdict-mark { background: var(--bad-bg); color: var(--bad); }
+  .verdict-title { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+  .verdict.ok .verdict-title { color: var(--good); } .verdict.ko .verdict-title { color: var(--bad); }
+  .conditions { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+  .conditions li { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 6px 10px; border-radius: 6px; background: var(--surface-2); }
+  .howto { margin: 0; padding-left: 18px; color: var(--text-2); }
+  .howto li { margin: 4px 0; }
 
-  .weeks { display: grid; gap: 12px; }
-  details.week { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; }
-  details.week > summary { list-style: none; cursor: pointer; padding: 16px 20px; display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: center; }
-  details.week > summary::-webkit-details-marker { display: none; }
-  .wk-title { font-weight: 650; font-size: 16px; }
-  .wk-title .num { color: var(--text-muted); font-weight: 500; margin-right: 6px; }
-  .wk-tech { color: var(--text-secondary); font-size: 13px; }
-  .stack { grid-column: 1 / -1; display: flex; gap: 2px; height: 10px; }
-  .stack span { border-radius: 4px; min-width: 4px; }
-  .s-pass { background: var(--good); } .s-fail { background: var(--critical); } .s-skip { background: var(--warning); }
-  .wk-body { padding: 0 20px 16px; overflow-x: auto; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .kpi .label { font-size: 12.5px; color: var(--text-2); }
+  .kpi .value { font-size: 28px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.25; margin-top: 2px; }
+  .kpi .note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .meter { height: 6px; background: var(--grid); border-radius: 3px; overflow: visible; margin-top: 10px; position: relative; }
+  .meter > span { display: block; height: 100%; background: var(--series-1); border-radius: 3px; }
+  .meter .threshold { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text); }
+
+  /* Flujo DevOps */
+  .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0; margin-top: 16px; }
+  .step { position: relative; padding: 14px 14px 14px 16px; border: 1px solid var(--border); background: var(--surface); margin-left: -1px; margin-top: -1px; }
+  .step-num { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .06em; }
+  .step-name { font-weight: 600; margin: 2px 0 1px; font-size: 13.5px; }
+  .step-weeks { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .step::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--pend-bg); }
+  .step.e-ok::before { background: var(--good-mark); } .step.e-fallo::before { background: var(--bad-mark); }
+
+  /* Semanas */
+  .weeks { display: grid; gap: 14px; }
+  .week-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 14px; align-items: start; }
+  .week-num { width: 44px; height: 44px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 16px; }
+  .week-title { font-size: 16px; font-weight: 650; margin: 0; }
+  .week-tech { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .week-body { margin-top: 14px; display: grid; gap: 14px; }
+  .explain { display: grid; gap: 10px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .explain { grid-template-columns: 1fr 1fr; } }
+  .explain > div { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .explain p { margin: 0; color: var(--text-2); }
+  .explain .k { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .runline { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12.5px; color: var(--muted); }
+  .runline code { white-space: pre-wrap; word-break: break-word; }
+  .stackbar { display: flex; gap: 2px; height: 8px; margin-top: 12px; }
+  .stackbar span { border-radius: 4px; min-width: 4px; }
+  .sb-pass { background: var(--good-mark); } .sb-fail { background: var(--bad-mark); } .sb-skip { background: var(--warn-mark); }
+  .panel { border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .panel-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  details.tests > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent); list-style: none; padding: 4px 0; }
+  details.tests > summary::-webkit-details-marker { display: none; }
+  details.tests > summary::before { content: "+ "; }
+  details.tests[open] > summary::before { content: "- "; }
 
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 13px; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
-  pre.fail { margin: 6px 0 0; white-space: pre-wrap; font-size: 12px; color: var(--critical); background: var(--critical-bg); padding: 8px; border-radius: 6px; max-height: 200px; overflow: auto; }
-  pre.console { background: var(--code-bg); padding: 12px; border-radius: 8px; max-height: 360px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
-  .hbar { height: 8px; background: var(--series-1); border-radius: 0 4px 4px 0; margin-top: 6px; min-width: 2px; }
+  pre.fail { margin: 6px 0 0; white-space: pre-wrap; font-size: 12px; color: var(--bad); background: var(--bad-bg); padding: 8px; border-radius: 6px; max-height: 200px; overflow: auto; }
+  pre.console { background: var(--code-bg); padding: 12px; border-radius: 8px; max-height: 360px; overflow: auto; font-size: 12px; white-space: pre-wrap; margin: 0; }
+  .hbar { height: 6px; background: var(--series-1); border-radius: 0 3px 3px 0; margin-top: 6px; min-width: 2px; }
 
+  .grid-2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 900px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
   .chart-wrap { position: relative; }
-  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; flex-wrap: wrap; }
+  .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-2); margin-bottom: 6px; flex-wrap: wrap; }
   .legend i { display: inline-block; width: 12px; height: 2px; vertical-align: middle; margin-right: 6px; }
-  .tooltip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; white-space: nowrap; z-index: 2; }
-  .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  @media (min-width: 900px) { .grid-2 { grid-template-columns: 3fr 2fr; } .grid-2.even { grid-template-columns: 1fr 1fr; } }
-  .empty { text-align: center; padding: 48px 16px; }
+  .tooltip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; white-space: nowrap; z-index: 2; }
+  .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .empty { padding: 14px; border: 1px dashed var(--border-strong); border-radius: 8px; color: var(--muted); }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
+
+{% macro estado_caso(e) -%}
+  {{ {"passed": "Aprobada", "failed": "Fallida", "error": "Error", "skipped": "Omitida"}[e] }}
+{%- endmacro %}
+{% macro estado_etapa(e) -%}
+  {{ {"ok": "Correcto", "fallo": "Con fallos", "pendiente": "Sin datos"}[e] }}
+{%- endmacro %}
+
+{% macro semana(s) %}
+<article class="card pad" id="semana-{{ s.clave }}">
+  <div class="week-head">
+    <div class="week-num">{{ s.clave }}</div>
     <div>
-      <h1>Dashboard de Calidad</h1>
-      <p class="sub">Pruebas y Mantenimiento de Software · Proyecto Final DevOps · Semanas 1 a 10</p>
-      <p class="muted" style="margin:4px 0 0;font-size:13px">
-        {% if r.meta %}Última ejecución: {{ r.meta.fecha | replace("T", " ") }} · modo {{ r.meta.modo }} · filtro {{ r.meta.filtro }}{% else %}Sin ejecuciones todavía{% endif %}
-      </p>
+      <h3 class="week-title">Semana {{ s.clave }}: {{ s.titulo }}</h3>
+      <div class="week-tech">{{ s.tecnica }}</div>
     </div>
-    <div class="controls">
-      <label for="filtro" class="muted">Semana</label>
-      <select id="filtro">
-        {% for f in filtros %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
-      </select>
-      <button id="run" class="primary">▶ Ejecutar pruebas</button>
+    <div>
+      {% if s.total == 0 %}<span class="pill s-pendiente">Sin ejecutar</span>
+      {% elif s.fallidas %}<span class="pill s-fallo">{{ s.fallidas }} de {{ s.total }} fallidas</span>
+      {% else %}<span class="pill s-ok">{{ s.passed }} de {{ s.total }} aprobadas{% if s.skipped %} · {{ s.skipped }} omitidas{% endif %}</span>{% endif %}
     </div>
-  </header>
-
-  {% if not r.hay_datos %}
-  <div class="card empty">
-    <h2>Aún no hay resultados</h2>
-    <p class="muted">Pulsa <strong>Ejecutar pruebas</strong> o corre <code>python scripts/run_tests.py</code> en la terminal.</p>
   </div>
-  {% else %}
+  {% if s.total %}
+  <div class="stackbar" aria-hidden="true">
+    {% if s.passed %}<span class="sb-pass" style="flex: {{ s.passed }}"></span>{% endif %}
+    {% if s.fallidas %}<span class="sb-fail" style="flex: {{ s.fallidas }}"></span>{% endif %}
+    {% if s.skipped %}<span class="sb-skip" style="flex: {{ s.skipped }}"></span>{% endif %}
+  </div>
+  {% endif %}
+  <div class="week-body">
+    <div class="explain">
+      <div><div class="k">Qué demuestra</div><p>{{ s.objetivo }}</p></div>
+      <div><div class="k">Cómo leer el resultado</div><p>{{ s.lectura }}</p></div>
+    </div>
+    <div class="runline"><span>Código: <code>{{ s.modulo }}</code></span><span>Ejecutar: <code>{{ s.comando }}</code></span></div>
+    {{ caller() if caller is defined else "" }}
+    {% if s.casos %}
+    <details class="tests" {% if s.fallidas %}open{% endif %}>
+      <summary>Ver las {{ s.total }} pruebas de la semana</summary>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Prueba</th><th>Datos de entrada</th><th>Estado</th><th class="num">Tiempo</th></tr></thead>
+          <tbody>
+          {% for c in s.casos %}
+            <tr>
+              <td><code>{{ c.funcion }}</code><div class="muted" style="font-size:12px">{{ c.archivo }}</div></td>
+              <td>{% if c.parametros %}<code>{{ c.parametros }}</code>{% else %}<span class="muted">-</span>{% endif %}</td>
+              <td><span class="pill s-{{ c.estado }}">{{ estado_caso(c.estado) }}</span>{% if c.detalle %}<pre class="fail">{{ c.detalle }}</pre>{% endif %}</td>
+              <td class="num">{{ "%.3f" | format(c.tiempo) }} s</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+    {% endif %}
+  </div>
+</article>
+{% endmacro %}
 
-  <!-- KPIs -->
-  <section class="kpis" style="margin-top:0">
-    <div class="card kpi">
-      <div class="label">Quality Gate</div>
-      {% if r.gate.aprobado %}
-        <div class="gate ok"><span class="ico">✔</span>APROBADO</div>
-      {% else %}
-        <div class="gate ko"><span class="ico">✖</span>RECHAZADO</div>
-      {% endif %}
-      <ul class="checks">
-        <li><span class="{{ 'ok' if r.gate.pruebas_ok else 'ko' }}">{{ "✔" if r.gate.pruebas_ok else "✖" }}</span> 0 pruebas fallidas</li>
-        <li><span class="{{ 'ok' if r.gate.cobertura_ok else 'ko' }}">{{ "✔" if r.gate.cobertura_ok else "✖" }}</span> cobertura ≥ {{ r.umbral | int }}%</li>
-        <li><span class="{{ 'ok' if r.gate.lint_ok else 'ko' }}">{{ "✔" if r.gate.lint_ok else "✖" }}</span> 0 hallazgos de linter</li>
-      </ul>
-    </div>
-    <div class="card kpi">
-      <div class="label">Pruebas ejecutadas</div>
-      <div class="value">{{ r.total }}</div>
-      <div class="note">
-        <span class="badge b-passed">{{ r.passed }} passed</span>
-        {% if r.failed + r.error %}<span class="badge b-failed">{{ r.failed + r.error }} failed</span>{% endif %}
-        {% if r.skipped %}<span class="badge b-skipped">{{ r.skipped }} skipped</span>{% endif %}
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-row">
+      <div class="brand">
+        <h1>Dashboard de Calidad</h1>
+        <p>Pruebas y Mantenimiento de Software · Proyecto Final DevOps · Universidad Cooperativa de Colombia</p>
+      </div>
+      <div class="controls">
+        <label for="filtro">Semana</label>
+        <select id="filtro">
+          {% for f in filtros %}<option value="{{ f }}">{{ "Todas las semanas" if f == "todas" else f | replace("semana", "Semana ") }}</option>{% endfor %}
+        </select>
+        <button id="run" class="btn btn-primary">Ejecutar pruebas</button>
       </div>
     </div>
-    <div class="card kpi">
-      <div class="label">Tasa de éxito</div>
-      <div class="value">{{ r.tasa_exito }}%</div>
-      <div class="meter"><span style="width: {{ r.tasa_exito }}%"></span></div>
-    </div>
-    <div class="card kpi">
-      <div class="label">Cobertura de código</div>
-      <div class="value">{{ r.cobertura.total if r.cobertura.total is not none else "—" }}%</div>
-      <div class="meter" title="Umbral {{ r.umbral|int }}%">
-        <span style="width: {{ r.cobertura.total or 0 }}%"></span>
-        <i class="threshold" style="left: {{ r.umbral }}%"></i>
+    <nav class="nav" aria-label="Secciones">
+      <a href="#resumen">Resumen</a>
+      {% for b in r.bloques %}<a href="#{{ b.id }}">Semanas {{ b.semanas[0] }}-{{ b.semanas[-1] }} · {{ b.titulo }}</a>{% endfor %}
+      <a href="#historial">Historial</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- RESUMEN -->
+  <section id="resumen">
+    <p class="eyebrow">Resumen</p>
+    <div class="intro">
+      <div class="card pad">
+        {% if r.hay_datos %}
+          <div class="verdict {{ 'ok' if r.gate.aprobado else 'ko' }}">
+            <div class="verdict-mark">
+              {% if r.gate.aprobado %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              {% else %}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              {% endif %}
+            </div>
+            <div>
+              <div class="muted" style="font-size:12.5px">Quality Gate</div>
+              <div class="verdict-title">{{ "Aprobado" if r.gate.aprobado else "Rechazado" }}</div>
+              <div class="muted" style="font-size:12px">
+                {{ r.meta.fecha | replace("T", " ") if r.meta else "" }} · ejecución {{ r.meta.modo if r.meta else "" }} · {{ "todas las semanas" if not r.meta or r.meta.filtro == "todas" else r.meta.filtro }}
+              </div>
+            </div>
+          </div>
+          <ul class="conditions">
+            <li><span>0 pruebas fallidas</span><span class="pill {{ 's-ok' if r.gate.pruebas_ok else 's-fallo' }}">{{ "Cumple" if r.gate.pruebas_ok else "No cumple" }}</span></li>
+            <li><span>Cobertura de código de al menos {{ r.umbral | int }}%</span><span class="pill {{ 's-ok' if r.gate.cobertura_ok else 's-fallo' }}">{{ "Cumple" if r.gate.cobertura_ok else "No cumple" }}</span></li>
+            <li><span>0 hallazgos del análisis estático</span><span class="pill {{ 's-ok' if r.gate.lint_ok else 's-fallo' }}">{{ "Cumple" if r.gate.lint_ok else "No cumple" }}</span></li>
+          </ul>
+        {% else %}
+          <h3>Aún no hay resultados</h3>
+          <p class="muted">Pulsa <strong>Ejecutar pruebas</strong> o corre <code>python scripts/run_tests.py</code>.</p>
+        {% endif %}
       </div>
-      <div class="note">Línea negra = umbral {{ r.umbral|int }}% · <a href="/cobertura/" target="_blank">reporte HTML</a></div>
+      <div class="card pad">
+        <h3 style="margin-bottom:8px">Cómo leer este tablero</h3>
+        <ol class="howto">
+          <li>El <strong>Quality Gate</strong> es el veredicto final: la entrega solo se aprueba si cumple sus tres condiciones.</li>
+          <li>El <strong>flujo DevOps</strong> muestra las etapas construidas durante el curso, en orden, con el estado de cada una.</li>
+          <li>Cada <strong>semana</strong> explica qué demuestra, cómo leer su resultado y con qué comando se ejecuta; abajo están sus pruebas.</li>
+          <li>Los botones ejecutan todo en vivo: pruebas, prueba de carga (Semana 8), despliegue (Semana 9) e infraestructura (Semana 10).</li>
+        </ol>
+      </div>
     </div>
-    <div class="card kpi">
-      <div class="label">Hallazgos de linter</div>
-      <div class="value">{{ r.lint.hallazgos | length if r.lint.ejecutado else "—" }}</div>
-      <div class="note">flake8 · análisis estático (Semana 7)</div>
+
+    {% if r.hay_datos %}
+    <div class="kpis">
+      <div class="card pad kpi">
+        <div class="label">Pruebas ejecutadas</div>
+        <div class="value">{{ r.total }}</div>
+        <div class="note">{{ r.passed }} aprobadas · {{ r.failed + r.error }} fallidas · {{ r.skipped }} omitidas</div>
+      </div>
+      <div class="card pad kpi">
+        <div class="label">Tasa de éxito</div>
+        <div class="value">{{ r.tasa_exito }}%</div>
+        <div class="meter"><span style="width: {{ r.tasa_exito }}%"></span></div>
+      </div>
+      <div class="card pad kpi">
+        <div class="label">Cobertura de código</div>
+        <div class="value">{{ r.cobertura.total if r.cobertura.total is not none else "-" }}%</div>
+        <div class="meter" title="Umbral {{ r.umbral | int }}%"><span style="width: {{ r.cobertura.total or 0 }}%"></span><i class="threshold" style="left: {{ r.umbral }}%"></i></div>
+        <div class="note">La marca indica el mínimo exigido ({{ r.umbral | int }}%)</div>
+      </div>
+      <div class="card pad kpi">
+        <div class="label">Hallazgos del análisis estático</div>
+        <div class="value">{{ r.lint.hallazgos | length if r.lint.ejecutado else "-" }}</div>
+        <div class="note">flake8 sobre todo el proyecto</div>
+      </div>
+      <div class="card pad kpi">
+        <div class="label">Duración de la suite</div>
+        <div class="value">{{ r.duracion }} s</div>
+        <div class="note">suma de los tiempos de cada prueba</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card pad" style="margin-top:12px">
+      <h3>Flujo DevOps del proyecto</h3>
+      <p class="muted" style="margin:4px 0 0">Del código a producción: cada etapa corresponde a una o más semanas del curso.</p>
+      <div class="flow">
+        {% for e in r.etapas %}
+        <div class="step e-{{ e.estado }}" id="{{ e.id }}">
+          <div class="step-num">ETAPA {{ loop.index }}</div>
+          <div class="step-name">{{ e.nombre }}</div>
+          <div class="step-weeks">{{ e.semanas }}</div>
+          <span class="pill s-{{ e.estado }}">{{ estado_etapa(e.estado) }}</span>
+        </div>
+        {% endfor %}
+      </div>
     </div>
   </section>
 
-  <!-- Pruebas por semana -->
-  <section>
-    <h2>Pruebas por clase</h2>
+  {% set S = r.por_semana %}
+
+  <!-- BLOQUE 1 -->
+  {% set b = r.bloques[0] %}
+  <section class="block" id="{{ b.id }}">
+    <div class="block-head">
+      <div><p class="eyebrow">Semanas 1 a 3</p><h2>{{ b.titulo }}</h2></div>
+      <span class="owner">Expone: {{ b.responsable }}</span>
+    </div>
     <div class="weeks">
-      {% for s in r.semanas %}
-      <details class="week" {% if s.fallidas %}open{% endif %}>
-        <summary>
-          <div>
-            <div class="wk-title"><span class="num">Semana {{ s.clave }}</span>{{ s.titulo }}</div>
-            <div class="wk-tech">{{ s.tecnica }} · <code>{{ s.modulo }}</code></div>
-          </div>
-          <div>
-            {% if s.total == 0 %}
-              <span class="badge b-skipped">sin ejecutar</span>
-            {% elif s.fallidas %}
-              <span class="badge b-failed">{{ s.fallidas }} / {{ s.total }} fallaron</span>
-            {% else %}
-              <span class="badge b-passed">{{ s.passed }} / {{ s.total }} passed</span>
-            {% endif %}
-          </div>
-          {% if s.total %}
-          <div class="stack" aria-hidden="true">
-            {% if s.passed %}<span class="s-pass" style="flex: {{ s.passed }}"></span>{% endif %}
-            {% if s.fallidas %}<span class="s-fail" style="flex: {{ s.fallidas }}"></span>{% endif %}
-            {% if s.skipped %}<span class="s-skip" style="flex: {{ s.skipped }}"></span>{% endif %}
-          </div>
-          {% endif %}
-        </summary>
-        {% if s.casos %}
-        <div class="wk-body">
+      {{ semana(S["1"]) }}
+      {{ semana(S["2"]) }}
+      {% call semana(S["3"]) %}
+      <div class="panel">
+        <div class="panel-head">
+          <h4 style="margin:0">Cobertura por módulo</h4>
+          <a href="/cobertura/" target="_blank" style="font-size:12.5px">Abrir reporte HTML de cobertura</a>
+        </div>
+        {% if r.cobertura.archivos %}
+        <div class="table-wrap">
           <table>
-            <thead><tr><th>Prueba</th><th>Datos inyectados</th><th>Estado</th><th class="num">Tiempo</th></tr></thead>
+            <thead><tr><th>Archivo</th><th style="min-width:140px">Cobertura</th><th>Líneas sin probar</th></tr></thead>
             <tbody>
-            {% for c in s.casos %}
+            {% for f in r.cobertura.archivos %}
               <tr>
-                <td><code>{{ c.funcion }}</code><div class="muted" style="font-size:12px">{{ c.archivo }}</div></td>
-                <td>{% if c.parametros %}<code>{{ c.parametros }}</code>{% else %}<span class="muted">—</span>{% endif %}</td>
-                <td>
-                  <span class="badge b-{{ c.estado }}">{{ c.estado | upper }}</span>
-                  {% if c.detalle %}<pre class="fail">{{ c.detalle }}</pre>{% endif %}
-                </td>
-                <td class="num">{{ "%.3f" | format(c.tiempo) }}s</td>
+                <td><code>{{ f.archivo }}</code></td>
+                <td>{{ f.porcentaje }}%<div class="meter" style="margin-top:6px"><span style="width: {{ f.porcentaje }}%; background: {{ 'var(--series-1)' if f.porcentaje >= r.umbral else 'var(--bad-mark)' }}"></span></div></td>
+                <td>{% if f.faltantes %}<code>{{ f.faltantes | join(", ") }}</code>{% else %}<span class="muted">Ninguna</span>{% endif %}</td>
               </tr>
             {% endfor %}
             </tbody>
           </table>
         </div>
+        {% else %}<div class="empty">Sin datos de cobertura todavía.</div>{% endif %}
+      </div>
+      {% endcall %}
+    </div>
+  </section>
+
+  <!-- BLOQUE 2 -->
+  {% set b = r.bloques[1] %}
+  <section class="block" id="{{ b.id }}">
+    <div class="block-head">
+      <div><p class="eyebrow">Semanas 4 a 6</p><h2>{{ b.titulo }}</h2></div>
+      <span class="owner">Expone: {{ b.responsable }}</span>
+    </div>
+    <div class="weeks">
+      {{ semana(S["4"]) }}
+      {{ semana(S["5"]) }}
+      {% call semana(S["6"]) %}
+      <div class="panel">
+        <h4>Pipeline en GitHub Actions</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Workflow</th><th>Cuándo se ejecuta</th><th>Qué valida</th></tr></thead>
+            <tbody>
+              <tr><td><code>ci.yml</code></td><td>Cada push o pull request a main</td><td>Pruebas y Quality Gate, contenedores, carga e infraestructura</td></tr>
+              <tr><td><code>sonar.yml</code></td><td>Cada push o pull request a main</td><td>Análisis estático en SonarCloud (Semana 7)</td></tr>
+              <tr><td><code>cd.yml</code></td><td>Cuando el CI de main termina en verde</td><td>Smoke Test en Staging y promoción o rollback (Semana 9)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin:10px 0 0;font-size:12.5px"><a href="{{ r.repo_actions }}" target="_blank">Ver las ejecuciones en GitHub Actions</a></p>
+      </div>
+      {% endcall %}
+    </div>
+  </section>
+
+  <!-- BLOQUE 3 -->
+  {% set b = r.bloques[2] %}
+  <section class="block" id="{{ b.id }}">
+    <div class="block-head">
+      <div><p class="eyebrow">Semanas 7 a 10</p><h2>{{ b.titulo }}</h2></div>
+      <span class="owner">Expone: {{ b.responsable }}</span>
+    </div>
+    <div class="weeks">
+
+      {% call semana(S["7"]) %}
+      <div class="panel">
+        <div class="panel-head">
+          <h4 style="margin:0">Hallazgos de flake8</h4>
+          {% if not r.lint.ejecutado %}<span class="pill s-pendiente">Sin ejecutar</span>
+          {% elif r.lint.hallazgos %}<span class="pill s-fallo">{{ r.lint.hallazgos | length }} hallazgos</span>
+          {% else %}<span class="pill s-ok">Sin hallazgos</span>{% endif %}
+        </div>
+        {% if r.lint.hallazgos %}
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Archivo</th><th class="num">Línea</th><th>Regla</th><th>Mensaje</th></tr></thead>
+            <tbody>
+            {% for h in r.lint.hallazgos %}
+              <tr><td><code>{{ h.archivo }}</code></td><td class="num">{{ h.linea }}:{{ h.columna }}</td><td><code>{{ h.codigo }}</code></td><td>{{ h.mensaje }}</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted" style="margin:0">El código cumple las reglas de estilo y complejidad. SonarCloud complementa este análisis en el pipeline (<code>.github/workflows/sonar.yml</code>).</p>
         {% endif %}
-      </details>
-      {% endfor %}
-    </div>
-  </section>
-
-  <!-- Análisis estático -->
-  <section class="card">
-    <div class="section-head">
-      <h2>Análisis estático · Semana 7</h2>
-      {% if not r.lint.ejecutado %}
-        <span class="badge b-skipped">no ejecutado</span>
-      {% elif r.lint.hallazgos %}
-        <span class="badge b-failed">{{ r.lint.hallazgos | length }} hallazgo(s)</span>
-      {% else %}
-        <span class="badge b-passed">0 hallazgos</span>
-      {% endif %}
-    </div>
-    <p class="muted" style="margin-top:0">flake8 revisa el código sin ejecutarlo en cada corrida. SonarCloud hace el análisis profundo (bugs, vulnerabilidades, code smells) en GitHub Actions: <code>.github/workflows/sonar.yml</code>.</p>
-    {% if r.lint.hallazgos %}
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Archivo</th><th class="num">Línea</th><th>Regla</th><th>Mensaje</th></tr></thead>
-        <tbody>
-        {% for h in r.lint.hallazgos %}
-          <tr><td><code>{{ h.archivo }}</code></td><td class="num">{{ h.linea }}:{{ h.columna }}</td><td><code>{{ h.codigo }}</code></td><td>{{ h.mensaje }}</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% endif %}
-  </section>
-  {% endif %}
-
-  <!-- Prueba de carga -->
-  <section class="card">
-    <div class="section-head">
-      <h2>Prueba de carga · Semana 8 (Locust)</h2>
-      <div class="controls">
-        <label>Usuarios <input type="number" id="usuarios" value="200" min="1" max="2000"></label>
-        <label>Ritmo/s <input type="number" id="ritmo" value="20" min="1" max="500"></label>
-        <label>Duración s <input type="number" id="duracion" value="30" min="5" max="300"></label>
-        <button id="run-load" class="primary">▶ Lanzar enjambre</button>
       </div>
-    </div>
-    {% set c = r.carga %}
-    {% if not c %}
-      <p class="muted">Aún no hay resultados. Pulsa <strong>Lanzar enjambre</strong> o corre <code>python scripts/run_load_test.py</code>.</p>
-    {% else %}
-      {% set agg = c.endpoints | selectattr("nombre", "equalto", "Aggregated") | first %}
-      <p class="muted" style="margin-top:0">{{ c.fecha | replace("T", " ") }} · {{ c.usuarios }} usuarios · {{ c.ritmo }}/s · {{ c.duracion_s }} s · {{ c.host }} · <a href="/carga/locust.html" target="_blank">reporte HTML de Locust</a></p>
-      <div class="kpis">
-        <div class="card kpi">
-          <div class="label">Resultado</div>
-          {% if c.aprobado %}<div class="gate ok"><span class="ico">✔</span>APROBADA</div>{% else %}<div class="gate ko"><span class="ico">✖</span>RECHAZADA</div>{% endif %}
-          <ul class="checks">
-            {% for k in c.checks %}<li><span class="{{ 'ok' if k.ok else 'ko' }}">{{ "✔" if k.ok else "✖" }}</span> {{ k.regla }} <span class="muted">({{ k.valor }})</span></li>{% endfor %}
-          </ul>
+      {% endcall %}
+
+      {% call semana(S["8"]) %}
+      {% set c = r.carga %}
+      <div class="panel">
+        <div class="panel-head">
+          <h4 style="margin:0">Prueba de carga</h4>
+          <div class="controls">
+            <label>Usuarios <input type="number" id="usuarios" value="200" min="1" max="2000"></label>
+            <label>Nuevos por segundo <input type="number" id="ritmo" value="20" min="1" max="500"></label>
+            <label>Duración (s) <input type="number" id="duracion" value="30" min="5" max="300"></label>
+            <button id="run-load" class="btn btn-primary">Lanzar prueba de carga</button>
+          </div>
         </div>
-        {% if agg %}
-        <div class="card kpi"><div class="label">Peticiones totales</div><div class="value">{{ agg.peticiones }}</div><div class="note">{{ agg.fallos }} fallidas</div></div>
-        <div class="card kpi"><div class="label">Throughput</div><div class="value">{{ agg.rps }}</div><div class="note">peticiones por segundo (RPS)</div></div>
-        <div class="card kpi"><div class="label">Latencia p95 global</div><div class="value">{{ agg.p95_ms | int }} ms</div><div class="note">mediana {{ agg.mediana_ms | int }} ms</div></div>
+        {% if not c %}
+          <div class="empty">Aún no hay resultados. Configura la prueba y pulsa Lanzar prueba de carga.</div>
+        {% else %}
+          {% set agg = c.endpoints | selectattr("nombre", "equalto", "Aggregated") | first %}
+          <p class="muted" style="margin:0 0 12px">{{ c.fecha | replace("T", " ") }} · {{ c.usuarios }} usuarios · {{ c.ritmo }} nuevos por segundo · {{ c.duracion_s }} s · <a href="/carga/locust.html" target="_blank">reporte HTML de Locust</a></p>
+          <div class="kpis">
+            <div class="card pad kpi">
+              <div class="label">Resultado</div>
+              <div class="value" style="font-size:20px;color:{{ 'var(--good)' if c.aprobado else 'var(--bad)' }}">{{ "Aprobada" if c.aprobado else "Rechazada" }}</div>
+              {% for k in c.checks %}<div class="note">{{ "Cumple" if k.ok else "No cumple" }}: {{ k.regla }} ({{ k.valor }})</div>{% endfor %}
+            </div>
+            {% if agg %}
+            <div class="card pad kpi"><div class="label">Peticiones totales</div><div class="value">{{ agg.peticiones }}</div><div class="note">{{ agg.fallos }} fallidas</div></div>
+            <div class="card pad kpi"><div class="label">Throughput</div><div class="value">{{ agg.rps }}</div><div class="note">peticiones por segundo</div></div>
+            <div class="card pad kpi"><div class="label">Latencia p95 global</div><div class="value">{{ agg.p95_ms | int }} ms</div><div class="note">mediana {{ agg.mediana_ms | int }} ms</div></div>
+            {% endif %}
+          </div>
+          {% set max_avg = (c.endpoints | rejectattr("nombre", "equalto", "Aggregated") | map(attribute="promedio_ms") | max) or 1 %}
+          <div class="table-wrap" style="margin-top:14px">
+            <table>
+              <thead><tr><th>Endpoint</th><th class="num">Peticiones</th><th class="num">Fallos</th><th class="num">Mediana</th><th style="min-width:160px">Promedio</th><th class="num">p95</th><th class="num">p99</th><th class="num">Máximo</th><th class="num">RPS</th></tr></thead>
+              <tbody>
+              {% for e in c.endpoints if e.nombre != "Aggregated" %}
+                <tr>
+                  <td><code>GET {{ e.nombre }}</code></td>
+                  <td class="num">{{ e.peticiones }}</td>
+                  <td class="num">{{ e.fallos }}</td>
+                  <td class="num">{{ e.mediana_ms | int }} ms</td>
+                  <td>{{ e.promedio_ms }} ms<div class="hbar" style="width: {{ (100 * e.promedio_ms / max_avg) | round(1) }}%"></div></td>
+                  <td class="num">{{ e.p95_ms | int }} ms</td>
+                  <td class="num">{{ e.p99_ms | int }} ms</td>
+                  <td class="num">{{ e.max_ms | int }} ms</td>
+                  <td class="num">{{ e.rps }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if c.serie | length > 1 %}
+          <div class="grid-2" style="margin-top:14px">
+            <div>
+              <h4>Peticiones por segundo</h4>
+              <div class="legend"><span><i style="background:var(--series-1)"></i>RPS</span><span><i style="background:var(--bad-mark)"></i>Fallos por segundo</span></div>
+              <div class="chart-wrap"><svg id="chart-rps" width="100%" height="200" role="img" aria-label="Peticiones por segundo durante la prueba"></svg><div class="tooltip"></div></div>
+            </div>
+            <div>
+              <h4>Tiempo de respuesta (ms)</h4>
+              <div class="legend"><span><i style="background:var(--series-1)"></i>Mediana (p50)</span><span><i style="background:var(--series-2)"></i>Percentil 95</span></div>
+              <div class="chart-wrap"><svg id="chart-lat" width="100%" height="200" role="img" aria-label="Latencia p50 y p95 durante la prueba"></svg><div class="tooltip"></div></div>
+            </div>
+          </div>
+          {% endif %}
         {% endif %}
       </div>
+      {% endcall %}
 
-      {% set max_avg = (c.endpoints | rejectattr("nombre", "equalto", "Aggregated") | map(attribute="promedio_ms") | max) or 1 %}
-      <div class="table-wrap" style="margin-top:16px">
-        <table>
-          <thead><tr><th>Endpoint</th><th class="num">Peticiones</th><th class="num">Fallos</th><th class="num">Mediana</th><th style="min-width:160px">Promedio</th><th class="num">p95</th><th class="num">p99</th><th class="num">Máx</th><th class="num">RPS</th></tr></thead>
-          <tbody>
-          {% for e in c.endpoints if e.nombre != "Aggregated" %}
-            <tr>
-              <td><code>GET {{ e.nombre }}</code></td>
-              <td class="num">{{ e.peticiones }}</td>
-              <td class="num">{{ e.fallos }}</td>
-              <td class="num">{{ e.mediana_ms | int }} ms</td>
-              <td>{{ e.promedio_ms }} ms<div class="hbar" style="width: {{ (100 * e.promedio_ms / max_avg) | round(1) }}%"></div></td>
-              <td class="num">{{ e.p95_ms | int }} ms</td>
-              <td class="num">{{ e.p99_ms | int }} ms</td>
-              <td class="num">{{ e.max_ms | int }} ms</td>
-              <td class="num">{{ e.rps }}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      {% if c.serie | length > 1 %}
-      <div class="grid-2 even" style="margin-top:16px">
-        <div>
-          <h3>Peticiones por segundo</h3>
-          <div class="legend"><span><i style="background:var(--series-1)"></i>RPS</span><span><i style="background:var(--critical)"></i>Fallos/s</span></div>
-          <div class="chart-wrap"><svg id="chart-rps" width="100%" height="200" role="img" aria-label="Peticiones por segundo durante la prueba"></svg><div class="tooltip"></div></div>
+      {% call semana(S["9"]) %}
+      <div class="panel">
+        <div class="panel-head">
+          <h4 style="margin:0">Pipeline de despliegue</h4>
+          <div class="controls">
+            <label for="escenario">Escenario</label>
+            <select id="escenario">
+              <option value="exitoso">Caso A: Staging sano (HTTP 200)</option>
+              <option value="fallo">Caso B: error en Staging (HTTP 500)</option>
+              <option value="caido">Servidor de Staging apagado</option>
+            </select>
+            <button id="run-deploy" class="btn btn-primary">Ejecutar despliegue</button>
+          </div>
         </div>
-        <div>
-          <h3>Tiempo de respuesta (ms)</h3>
-          <div class="legend"><span><i style="background:var(--series-1)"></i>Mediana (p50)</span><span><i style="background:var(--series-2)"></i>Percentil 95</span></div>
-          <div class="chart-wrap"><svg id="chart-lat" width="100%" height="200" role="img" aria-label="Latencia p50 y p95 durante la prueba"></svg><div class="tooltip"></div></div>
+        <p class="muted" style="margin:0 0 12px">Secuencia: commit, pipeline CD, Smoke Test en Staging, promoción o rollback, notificación a Telegram.</p>
+        {% if not r.despliegues %}
+          <div class="empty">Aún no hay despliegues. Elige un escenario y pulsa Ejecutar despliegue.</div>
+        {% else %}
+          {% set ultimo = r.despliegues[-1] %}
+          <div class="kpis">
+            <div class="card pad kpi">
+              <div class="label">Último despliegue</div>
+              <div class="value" style="font-size:20px;color:{{ 'var(--good)' if ultimo.resultado == 'PROMOCIONADO' else 'var(--bad)' }}">{{ "En Producción" if ultimo.resultado == "PROMOCIONADO" else "Rollback" }}</div>
+              <div class="note">{{ ultimo.detalle }} · {{ ultimo.fecha | replace("T", " ") }}</div>
+            </div>
+            <div class="card pad kpi"><div class="label">Promociones a Producción</div><div class="value">{{ r.despliegues | selectattr("resultado", "equalto", "PROMOCIONADO") | list | length }}</div><div class="note">de {{ r.despliegues | length }} ejecuciones</div></div>
+            <div class="card pad kpi"><div class="label">Rollbacks automáticos</div><div class="value">{{ r.despliegues | rejectattr("resultado", "equalto", "PROMOCIONADO") | list | length }}</div><div class="note">fallos aislados en Staging</div></div>
+            <div class="card pad kpi"><div class="label">Alertas enviadas a Telegram</div><div class="value">{{ r.despliegues | selectattr("telegram") | list | length }}</div><div class="note">requiere TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID</div></div>
+          </div>
+          <div class="table-wrap" style="margin-top:14px">
+            <table>
+              <thead><tr><th>Fecha</th><th>Escenario</th><th>Origen</th><th class="num">HTTP</th><th>Resultado</th><th>Secreto</th><th>Telegram</th></tr></thead>
+              <tbody>
+              {% for d in r.despliegues | reverse %}
+                <tr>
+                  <td>{{ d.fecha | replace("T", " ") }}</td>
+                  <td>{{ {"exitoso": "Caso A", "fallo": "Caso B", "caido": "Servidor apagado"}.get(d.escenario, d.escenario) }}</td>
+                  <td>{{ d.origen }}</td>
+                  <td class="num">{{ d.http if d.http is not none else "-" }}</td>
+                  <td><span class="pill {{ 's-ok' if d.resultado == 'PROMOCIONADO' else 's-fallo' }}">{{ {"PROMOCIONADO": "Promocionado", "ROLLBACK": "Rollback", "ROLLBACK_CONEXION": "Rollback por conexión"}.get(d.resultado, d.resultado) }}</span></td>
+                  <td><code>{{ d.token }}</code></td>
+                  <td>{{ "Enviada" if d.telegram else "No enviada" }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </div>
+      {% endcall %}
+
+      {% call semana(S["10"]) %}
+      <div class="panel">
+        <div class="panel-head">
+          <h4 style="margin:0">Infraestructura en LocalStack</h4>
+          <div class="controls">
+            <button id="iac-refresh" class="btn">Consultar estado</button>
+            <button id="iac-run" class="btn btn-primary">Aprovisionar S3 y SQS</button>
+          </div>
         </div>
+        <div id="iac-box" class="muted">Consultando LocalStack...</div>
       </div>
-      {% endif %}
-    {% endif %}
-  </section>
+      {% endcall %}
 
-
-  <!-- Despliegue continuo -->
-  <section class="card">
-    <div class="section-head">
-      <h2>Despliegue continuo · Semana 9 (CD)</h2>
-      <div class="controls">
-        <label for="escenario" class="muted">Escenario</label>
-        <select id="escenario">
-          <option value="exitoso">A · Staging sano (HTTP 200)</option>
-          <option value="fallo">B · Bug en Staging (HTTP 500)</option>
-          <option value="caido">Servidor inaccesible</option>
-        </select>
-        <button id="run-deploy" class="primary">▶ Ejecutar pipeline CD</button>
-      </div>
     </div>
-    <p class="muted" style="margin-top:0">Commit → Pipeline CD → Staging Gate → Smoke Test → Promoción / Rollback → Notificación Telegram. El token del secreto siempre se muestra enmascarado.</p>
-    {% if not r.despliegues %}
-      <p class="muted">Aún no hay despliegues. Elige un escenario y pulsa <strong>Ejecutar pipeline CD</strong>, o corre <code>python scripts/run_deploy.py</code>.</p>
-    {% else %}
-      {% set ultimo = r.despliegues[-1] %}
-      <div class="kpis">
-        <div class="card kpi">
-          <div class="label">Último despliegue</div>
-          {% if ultimo.resultado == "PROMOCIONADO" %}<div class="gate ok"><span class="ico">🚀</span>PRODUCCIÓN</div>
-          {% else %}<div class="gate ko"><span class="ico">↩</span>ROLLBACK</div>{% endif %}
-          <div class="note">{{ ultimo.detalle }} · {{ ultimo.fecha | replace("T", " ") }}</div>
-        </div>
-        <div class="card kpi"><div class="label">Promociones</div><div class="value">{{ r.despliegues | selectattr("resultado", "equalto", "PROMOCIONADO") | list | length }}</div><div class="note">de {{ r.despliegues | length }} ejecuciones</div></div>
-        <div class="card kpi"><div class="label">Rollbacks automáticos</div><div class="value">{{ r.despliegues | rejectattr("resultado", "equalto", "PROMOCIONADO") | list | length }}</div><div class="note">fallos aislados en Staging</div></div>
-        <div class="card kpi"><div class="label">Alertas Telegram</div><div class="value">{{ r.despliegues | selectattr("telegram") | list | length }}</div><div class="note">notificaciones entregadas</div></div>
-      </div>
-      <div class="table-wrap" style="margin-top:16px">
-        <table>
-          <thead><tr><th>Fecha</th><th>Escenario</th><th>Origen</th><th class="num">HTTP</th><th>Resultado</th><th>Token</th><th>Telegram</th></tr></thead>
-          <tbody>
-          {% for d in r.despliegues | reverse %}
-            <tr>
-              <td>{{ d.fecha | replace("T", " ") }}</td>
-              <td>{{ d.escenario }}</td>
-              <td>{{ d.origen }}</td>
-              <td class="num">{{ d.http if d.http is not none else "—" }}</td>
-              <td><span class="badge {{ 'b-passed' if d.resultado == 'PROMOCIONADO' else 'b-failed' }}">{{ d.resultado | replace("_", " ") }}</span></td>
-              <td><code>{{ d.token }}</code></td>
-              <td>{{ "✔ enviado" if d.telegram else "—" }}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% endif %}
   </section>
 
-  <!-- Infraestructura como código -->
-  <section class="card">
-    <div class="section-head">
-      <h2>Infraestructura como código · Semana 10 (LocalStack)</h2>
-      <div class="controls">
-        <button id="iac-refresh">↻ Consultar</button>
-        <button id="iac-run" class="primary">▶ Aprovisionar S3 + SQS</button>
-      </div>
-    </div>
-    <p class="muted" style="margin-top:0">Levanta la nube local con <code>docker compose --profile iac up -d localstack</code>. El aprovisionamiento es idempotente: ejecutarlo 1 o 100 veces deja el mismo estado.</p>
-    <div id="iac-box" class="muted">Consultando LocalStack…</div>
-  </section>
-
-  {% if r.hay_datos %}
-  <section class="grid-2">
-    <!-- Historial -->
-    <div class="card">
-      <h2>Historial de ejecuciones</h2>
+  <!-- HISTORIAL -->
+  <section class="block" id="historial">
+    <div class="block-head"><div><p class="eyebrow">Seguimiento</p><h2>Historial de ejecuciones</h2></div></div>
+    <div class="card pad">
       {% if r.historial | length < 2 %}
-        <p class="muted">Se necesitan al menos 2 ejecuciones para dibujar la tendencia.</p>
+        <p class="muted" style="margin:0">Se necesitan al menos 2 ejecuciones para dibujar la tendencia.</p>
       {% else %}
         <div class="legend">
-          <span><i style="background:var(--series-1)"></i>Tasa de éxito %</span>
-          <span><i style="background:var(--series-2)"></i>Cobertura %</span>
+          <span><i style="background:var(--series-1)"></i>Tasa de éxito (%)</span>
+          <span><i style="background:var(--series-2)"></i>Cobertura (%)</span>
+          <span class="muted">Línea punteada: umbral del 80%</span>
         </div>
         <div class="chart-wrap">
           <svg id="hist" width="100%" height="220" role="img" aria-label="Historial de tasa de éxito y cobertura"></svg>
           <div class="tooltip"></div>
         </div>
       {% endif %}
-      <details style="margin-top:12px">
-        <summary class="muted" style="cursor:pointer">Ver tabla</summary>
+      <details class="tests" style="margin-top:10px">
+        <summary>Ver tabla del historial</summary>
         <div class="table-wrap">
-        <table style="margin-top:8px">
-          <thead><tr><th>Fecha</th><th>Filtro</th><th class="num">Pruebas</th><th class="num">Éxito</th><th class="num">Cobertura</th><th class="num">Linter</th><th>Gate</th></tr></thead>
-          <tbody>
-          {% for h in r.historial | reverse %}
-            <tr>
-              <td>{{ h.fecha | replace("T", " ") }}</td><td>{{ h.filtro }}</td>
-              <td class="num">{{ h.passed }}/{{ h.total }}</td>
-              <td class="num">{{ h.tasa_exito }}%</td>
-              <td class="num">{{ h.cobertura }}%</td>
-              <td class="num">{{ h.lint if h.lint is defined else "—" }}</td>
-              <td><span class="badge {{ 'b-passed' if h.gate_aprobado else 'b-failed' }}">{{ "OK" if h.gate_aprobado else "FALLO" }}</span></td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
+          <table>
+            <thead><tr><th>Fecha</th><th>Semanas</th><th class="num">Pruebas</th><th class="num">Éxito</th><th class="num">Cobertura</th><th class="num">Hallazgos</th><th>Quality Gate</th></tr></thead>
+            <tbody>
+            {% for h in r.historial | reverse %}
+              <tr>
+                <td>{{ h.fecha | replace("T", " ") }}</td>
+                <td>{{ "Todas" if h.filtro == "todas" else h.filtro | replace("semana", "Semana ") }}</td>
+                <td class="num">{{ h.passed }}/{{ h.total }}</td>
+                <td class="num">{{ h.tasa_exito }}%</td>
+                <td class="num">{{ h.cobertura }}%</td>
+                <td class="num">{{ h.lint if h.lint is defined else "-" }}</td>
+                <td><span class="pill {{ 's-ok' if h.gate_aprobado else 's-fallo' }}">{{ "Aprobado" if h.gate_aprobado else "Rechazado" }}</span></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
         </div>
       </details>
     </div>
-
-    <!-- Cobertura por archivo -->
-    <div class="card">
-      <h2>Cobertura por módulo</h2>
-      <div class="table-wrap">
-      <table>
-        <thead><tr><th>Archivo</th><th class="num">Cobertura</th><th>Líneas sin probar</th></tr></thead>
-        <tbody>
-        {% for f in r.cobertura.archivos %}
-          <tr>
-            <td><code>{{ f.archivo }}</code>
-              <div class="meter" style="margin-top:6px"><span style="width: {{ f.porcentaje }}%; background: {{ 'var(--series-1)' if f.porcentaje >= r.umbral else 'var(--critical)' }}"></span></div>
-            </td>
-            <td class="num">{{ f.porcentaje }}%</td>
-            <td>{% if f.faltantes %}<code>{{ f.faltantes | join(", ") }}</code>{% else %}<span class="muted">ninguna</span>{% endif %}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-      </div>
-    </div>
   </section>
-  {% endif %}
 
-  <section id="console-box" class="card" style="display:none">
-    <h2 id="console-title">Salida de la última ejecución</h2>
-    <pre class="console" id="console"></pre>
+  <section id="console-box" class="block" style="display:none">
+    <div class="block-head"><div><p class="eyebrow">Consola</p><h2 id="console-title">Salida de la última ejecución</h2></div></div>
+    <div class="card pad"><pre class="console" id="console"></pre></div>
   </section>
-</div>
+</main>
 
 <script>
 (function () {
-  const btns = [document.getElementById("run"), document.getElementById("run-load"), document.getElementById("run-deploy")];
+  const btns = {pruebas: document.getElementById("run"), carga: document.getElementById("run-load"), despliegue: document.getElementById("run-deploy")};
   const sel = document.getElementById("filtro");
   try { const f = localStorage.getItem("filtro"); if (f) sel.value = f; } catch (e) {}
 
   function ocupado(tipo) {
-    btns.forEach(b => b.disabled = true);
-    ({carga: btns[1], despliegue: btns[2]}[tipo] || btns[0]).textContent = "Ejecutando…";
+    Object.values(btns).forEach(b => { if (b) b.disabled = true; });
+    const b = btns[tipo] || btns.pruebas;
+    if (b) b.textContent = "Ejecutando...";
   }
   async function poll() {
     const r = await fetch("/api/estado").then(x => x.json());
@@ -515,35 +658,44 @@
     location.reload();
   }
 
-  btns[0].addEventListener("click", () => {
+  btns.pruebas.addEventListener("click", () => {
     try { localStorage.setItem("filtro", sel.value); } catch (e) {}
     lanzar("/api/ejecutar", {filtro: sel.value}, "pruebas");
   });
-  btns[1].addEventListener("click", () => {
+  btns.carga.addEventListener("click", () => {
     const n = id => parseInt(document.getElementById(id).value, 10);
     lanzar("/api/carga", {usuarios: n("usuarios"), ritmo: n("ritmo"), duracion: n("duracion")}, "carga");
   });
-
-  btns[2].addEventListener("click", () => {
+  btns.despliegue.addEventListener("click", () => {
     lanzar("/api/despliegue", {escenario: document.getElementById("escenario").value}, "despliegue");
   });
 
   // --- Semana 10: estado de LocalStack ---
   const iacBox = document.getElementById("iac-box");
+  const etapaIac = document.getElementById("etapa-iac");
   const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+  function marcarEtapa(estado, texto) {
+    etapaIac.className = "step e-" + estado;
+    etapaIac.querySelector(".pill").className = "pill s-" + estado;
+    etapaIac.querySelector(".pill").textContent = texto;
+  }
   function pintarIac(d) {
     if (!d.disponible) {
-      iacBox.innerHTML = `<span class="badge b-failed">LocalStack no disponible</span> <span class="muted">en <code>${esc(d.endpoint)}</code> (${esc(d.error)})</span>`;
+      iacBox.innerHTML = `<div class="empty">LocalStack no está disponible en <code>${esc(d.endpoint)}</code> (${esc(d.error)}). ` +
+        `Enciéndelo con <code>docker compose --profile iac up -d localstack</code>.</div>`;
+      marcarEtapa("pendiente", "Apagado");
       return;
     }
-    const lista = xs => xs.length ? xs.map(x => `<code>${esc(x)}</code>`).join(" ") : '<span class="muted">ninguno</span>';
-    iacBox.innerHTML = `<span class="badge b-passed">LocalStack activo</span> <span class="muted"><code>${esc(d.endpoint)}</code></span>` +
-      `<div class="table-wrap" style="margin-top:12px"><table><tbody>` +
+    const lista = xs => xs.length ? xs.map(x => `<code>${esc(x)}</code>`).join(" ") : '<span class="muted">Ninguno</span>';
+    iacBox.innerHTML = `<p style="margin:0 0 10px"><span class="pill s-ok">LocalStack activo</span> <span class="muted">${esc(d.endpoint)}</span></p>` +
+      `<div class="table-wrap"><table><thead><tr><th>Servicio</th><th>Recursos</th></tr></thead><tbody>` +
       `<tr><td>Buckets S3</td><td>${lista(d.buckets)}</td></tr>` +
       `<tr><td>Colas SQS</td><td>${lista(d.colas)}</td></tr></tbody></table></div>`;
+    const completo = d.buckets.includes("mi-bucket-pruebas") && d.colas.includes("cola-notificaciones");
+    marcarEtapa(completo ? "ok" : "pendiente", completo ? "Correcto" : "Sin aprovisionar");
   }
   async function iac(metodo, url) {
-    iacBox.textContent = "Consultando LocalStack…";
+    iacBox.textContent = "Consultando LocalStack...";
     pintarIac(await fetch(url, {method: metodo}).then(x => x.json()));
   }
   document.getElementById("iac-refresh").addEventListener("click", () => iac("GET", "/api/iac"));
@@ -555,15 +707,16 @@
     if (r.salida) {
       document.getElementById("console-box").style.display = "block";
       document.getElementById("console-title").textContent =
-        "Salida de la última ejecución (" + ({carga: "prueba de carga", despliegue: "pipeline CD"}[r.tipo] || "pruebas") + ")";
+        "Salida de la última ejecución: " + ({carga: "prueba de carga", despliegue: "pipeline de despliegue"}[r.tipo] || "pruebas");
       document.getElementById("console").textContent = r.salida;
     }
   });
 
-  // --- Gráfico de líneas genérico (SVG, un solo eje Y por gráfico) ---
+  // --- Gráfico de líneas (SVG, un solo eje Y por gráfico) ---
   const NS = "http://www.w3.org/2000/svg";
   const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const sw = v => `<span class="sw" style="background:var(${v})"></span>`;
 
   function lineChart(svg, data, opts) {
     if (!svg || data.length < 2) return;
@@ -578,22 +731,22 @@
       const ticks = opts.ticks || [0, maxV / 2, maxV].map(v => Math.round(v));
       ticks.forEach(v => {
         const ref = opts.ref === v;
-        svg.appendChild(el("line", {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: css(ref ? "--text-muted" : "--grid"), "stroke-dasharray": ref ? "4 4" : "", "stroke-width": 1}));
-        const t = el("text", {x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: css("--text-muted")});
+        svg.appendChild(el("line", {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: css(ref ? "--muted" : "--grid"), "stroke-dasharray": ref ? "4 4" : "", "stroke-width": 1}));
+        const t = el("text", {x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: css("--muted")});
         t.textContent = v + (opts.unit || ""); svg.appendChild(t);
       });
       if (opts.xLabel) {
         [0, data.length - 1].forEach(i => {
-          const t = el("text", {x: x(i), y: H - 6, "text-anchor": i ? "end" : "start", "font-size": 11, fill: css("--text-muted")});
+          const t = el("text", {x: x(i), y: H - 6, "text-anchor": i ? "end" : "start", "font-size": 11, fill: css("--muted")});
           t.textContent = opts.xLabel(data[i]); svg.appendChild(t);
         });
       }
       opts.series.forEach(s => {
         const pts = data.map((d, i) => `${x(i)},${y(d[s.key] || 0)}`).join(" ");
         svg.appendChild(el("polyline", {points: pts, fill: "none", stroke: css(s.color), "stroke-width": 2, "stroke-linejoin": "round"}));
-        if (data.length <= 40) data.forEach((d, i) => svg.appendChild(el("circle", {cx: x(i), cy: y(d[s.key] || 0), r: 4, fill: css(s.color), stroke: css("--surface-1"), "stroke-width": 2})));
+        if (data.length <= 40) data.forEach((d, i) => svg.appendChild(el("circle", {cx: x(i), cy: y(d[s.key] || 0), r: 4, fill: css(s.color), stroke: css("--surface"), "stroke-width": 2})));
       });
-      const cross = el("line", {y1: m.t, y2: m.t + ih, stroke: css("--text-muted"), "stroke-width": 1, visibility: "hidden"});
+      const cross = el("line", {y1: m.t, y2: m.t + ih, stroke: css("--muted"), "stroke-width": 1, visibility: "hidden"});
       svg.appendChild(cross);
       const hit = el("rect", {x: m.l, y: m.t, width: iw, height: ih, fill: "transparent"});
       svg.appendChild(hit);
@@ -616,23 +769,23 @@
   lineChart(document.getElementById("hist"), hist, {
     max: 100, ticks: [0, 50, 80, 100], ref: 80, unit: "%",
     series: [{key: "tasa_exito", color: "--series-1"}, {key: "cobertura", color: "--series-2"}],
-    tooltip: d => `<strong>${d.fecha.replace("T", " ")}</strong><br>Filtro: ${d.filtro}<br>` +
-      `<span style="color:var(--series-1)">●</span> Éxito: ${d.tasa_exito}% (${d.passed}/${d.total})<br>` +
-      `<span style="color:var(--series-2)">●</span> Cobertura: ${d.cobertura}%<br>` +
-      `Linter: ${d.lint ?? "—"} · Gate: ${d.gate_aprobado ? "✔ aprobado" : "✖ rechazado"}`
+    tooltip: d => `<strong>${d.fecha.replace("T", " ")}</strong><br>Semanas: ${d.filtro}<br>` +
+      `${sw("--series-1")}Éxito: ${d.tasa_exito}% (${d.passed}/${d.total})<br>` +
+      `${sw("--series-2")}Cobertura: ${d.cobertura}%<br>` +
+      `Hallazgos: ${d.lint ?? "-"} · Quality Gate: ${d.gate_aprobado ? "aprobado" : "rechazado"}`
   });
 
   const serie = {{ (r.carga.serie if r.carga else []) | tojson }};
   const seg = d => d.t + " s";
   lineChart(document.getElementById("chart-rps"), serie, {
     unit: "", xLabel: seg,
-    series: [{key: "rps", color: "--series-1"}, {key: "fallos_s", color: "--critical"}],
-    tooltip: d => `<strong>${d.t} s</strong> · ${d.usuarios} usuarios<br>RPS: ${d.rps}<br>Fallos/s: ${d.fallos_s}`
+    series: [{key: "rps", color: "--series-1"}, {key: "fallos_s", color: "--bad-mark"}],
+    tooltip: d => `<strong>Segundo ${d.t}</strong> · ${d.usuarios} usuarios<br>${sw("--series-1")}RPS: ${d.rps}<br>${sw("--bad-mark")}Fallos por segundo: ${d.fallos_s}`
   });
   lineChart(document.getElementById("chart-lat"), serie, {
     unit: "", xLabel: seg,
     series: [{key: "p50_ms", color: "--series-1"}, {key: "p95_ms", color: "--series-2"}],
-    tooltip: d => `<strong>${d.t} s</strong> · ${d.usuarios} usuarios<br>p50: ${d.p50_ms} ms<br>p95: ${d.p95_ms} ms`
+    tooltip: d => `<strong>Segundo ${d.t}</strong> · ${d.usuarios} usuarios<br>${sw("--series-1")}p50: ${d.p50_ms} ms<br>${sw("--series-2")}p95: ${d.p95_ms} ms`
   });
 })();
 </script>
