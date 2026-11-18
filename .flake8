@@ -1,0 +1,5 @@
+# Semana 7 — Linter (inspección preventiva rápida antes de SonarCloud)
+[flake8]
+max-line-length = 120
+max-complexity = 10
+exclude = .git,__pycache__,venv,.venv,reports,htmlcov
