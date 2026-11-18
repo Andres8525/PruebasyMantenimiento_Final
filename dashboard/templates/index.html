@@ -67,16 +67,21 @@
   header { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
   h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; }
   h2 { font-size: 18px; margin: 0 0 12px; }
+  h3 { font-size: 15px; margin: 0 0 8px; }
   .sub { color: var(--text-secondary); margin: 4px 0 0; }
   .muted { color: var(--text-muted); }
   .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
   section { margin-top: 24px; }
+  .section-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .section-head h2 { margin: 0; }
 
   .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  select, button {
+  .controls label { font-size: 13px; }
+  select, button, input[type=number] {
     font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
     background: var(--surface-1); color: var(--text-primary);
   }
+  input[type=number] { width: 90px; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
   button:disabled { opacity: .6; cursor: progress; }
 
@@ -96,6 +101,8 @@
   .gate { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 700; }
   .gate.ok { color: var(--good); } .gate.ko { color: var(--critical); }
   .gate .ico { font-size: 24px; }
+  .checks { list-style: none; padding: 0; margin: 6px 0 0; font-size: 13px; color: var(--text-secondary); }
+  .checks .ok { color: var(--good); font-weight: 700; } .checks .ko { color: var(--critical); font-weight: 700; }
 
   .weeks { display: grid; gap: 12px; }
   details.week { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; }
@@ -109,20 +116,22 @@
   .s-pass { background: var(--good); } .s-fail { background: var(--critical); } .s-skip { background: var(--warning); }
   .wk-body { padding: 0 20px 16px; overflow-x: auto; }
 
+  .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 8px; border-bottom: 1px solid var(--border); }
+  th { text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
   td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 13px; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
   pre.fail { margin: 6px 0 0; white-space: pre-wrap; font-size: 12px; color: var(--critical); background: var(--critical-bg); padding: 8px; border-radius: 6px; max-height: 200px; overflow: auto; }
   pre.console { background: var(--code-bg); padding: 12px; border-radius: 8px; max-height: 360px; overflow: auto; font-size: 12px; white-space: pre-wrap; }
+  .hbar { height: 8px; background: var(--series-1); border-radius: 0 4px 4px 0; margin-top: 6px; min-width: 2px; }
 
   .chart-wrap { position: relative; }
   .legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; flex-wrap: wrap; }
   .legend i { display: inline-block; width: 12px; height: 2px; vertical-align: middle; margin-right: 6px; }
-  #tooltip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; white-space: nowrap; }
+  .tooltip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; white-space: nowrap; z-index: 2; }
   .grid-2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  @media (min-width: 900px) { .grid-2 { grid-template-columns: 3fr 2fr; } }
+  @media (min-width: 900px) { .grid-2 { grid-template-columns: 3fr 2fr; } .grid-2.even { grid-template-columns: 1fr 1fr; } }
   .empty { text-align: center; padding: 48px 16px; }
 </style>
 </head>
@@ -131,7 +140,7 @@
   <header>
     <div>
       <h1>Dashboard de Calidad</h1>
-      <p class="sub">Pruebas y Mantenimiento de Software · Proyecto Final DevOps</p>
+      <p class="sub">Pruebas y Mantenimiento de Software · Proyecto Final DevOps · Semanas 1 a 8</p>
       <p class="muted" style="margin:4px 0 0;font-size:13px">
         {% if r.meta %}Última ejecución: {{ r.meta.fecha | replace("T", " ") }} · modo {{ r.meta.modo }} · filtro {{ r.meta.filtro }}{% else %}Sin ejecuciones todavía{% endif %}
       </p>
@@ -161,10 +170,11 @@
       {% else %}
         <div class="gate ko"><span class="ico">✖</span>RECHAZADO</div>
       {% endif %}
-      <div class="note">
-        {{ "✔" if r.gate.pruebas_ok else "✖" }} 0 fallos ·
-        {{ "✔" if r.gate.cobertura_ok else "✖" }} cobertura ≥ {{ r.umbral | int }}%
-      </div>
+      <ul class="checks">
+        <li><span class="{{ 'ok' if r.gate.pruebas_ok else 'ko' }}">{{ "✔" if r.gate.pruebas_ok else "✖" }}</span> 0 pruebas fallidas</li>
+        <li><span class="{{ 'ok' if r.gate.cobertura_ok else 'ko' }}">{{ "✔" if r.gate.cobertura_ok else "✖" }}</span> cobertura ≥ {{ r.umbral | int }}%</li>
+        <li><span class="{{ 'ok' if r.gate.lint_ok else 'ko' }}">{{ "✔" if r.gate.lint_ok else "✖" }}</span> 0 hallazgos de linter</li>
+      </ul>
     </div>
     <div class="card kpi">
       <div class="label">Pruebas ejecutadas</div>
@@ -190,9 +200,9 @@
       <div class="note">Línea negra = umbral {{ r.umbral|int }}% · <a href="/cobertura/" target="_blank">reporte HTML</a></div>
     </div>
     <div class="card kpi">
-      <div class="label">Duración total</div>
-      <div class="value">{{ r.duracion }}s</div>
-      <div class="note">suma de tiempos por caso</div>
+      <div class="label">Hallazgos de linter</div>
+      <div class="value">{{ r.lint.hallazgos | length if r.lint.ejecutado else "—" }}</div>
+      <div class="note">flake8 · análisis estático (Semana 7)</div>
     </div>
   </section>
 
@@ -249,6 +259,106 @@
     </div>
   </section>
 
+  <!-- Análisis estático -->
+  <section class="card">
+    <div class="section-head">
+      <h2>Análisis estático · Semana 7</h2>
+      {% if not r.lint.ejecutado %}
+        <span class="badge b-skipped">no ejecutado</span>
+      {% elif r.lint.hallazgos %}
+        <span class="badge b-failed">{{ r.lint.hallazgos | length }} hallazgo(s)</span>
+      {% else %}
+        <span class="badge b-passed">0 hallazgos</span>
+      {% endif %}
+    </div>
+    <p class="muted" style="margin-top:0">flake8 revisa el código sin ejecutarlo en cada corrida. SonarCloud hace el análisis profundo (bugs, vulnerabilidades, code smells) en GitHub Actions: <code>.github/workflows/sonar.yml</code>.</p>
+    {% if r.lint.hallazgos %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Archivo</th><th class="num">Línea</th><th>Regla</th><th>Mensaje</th></tr></thead>
+        <tbody>
+        {% for h in r.lint.hallazgos %}
+          <tr><td><code>{{ h.archivo }}</code></td><td class="num">{{ h.linea }}:{{ h.columna }}</td><td><code>{{ h.codigo }}</code></td><td>{{ h.mensaje }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  <!-- Prueba de carga -->
+  <section class="card">
+    <div class="section-head">
+      <h2>Prueba de carga · Semana 8 (Locust)</h2>
+      <div class="controls">
+        <label>Usuarios <input type="number" id="usuarios" value="200" min="1" max="2000"></label>
+        <label>Ritmo/s <input type="number" id="ritmo" value="20" min="1" max="500"></label>
+        <label>Duración s <input type="number" id="duracion" value="30" min="5" max="300"></label>
+        <button id="run-load" class="primary">▶ Lanzar enjambre</button>
+      </div>
+    </div>
+    {% set c = r.carga %}
+    {% if not c %}
+      <p class="muted">Aún no hay resultados. Pulsa <strong>Lanzar enjambre</strong> o corre <code>python scripts/run_load_test.py</code>.</p>
+    {% else %}
+      {% set agg = c.endpoints | selectattr("nombre", "equalto", "Aggregated") | first %}
+      <p class="muted" style="margin-top:0">{{ c.fecha | replace("T", " ") }} · {{ c.usuarios }} usuarios · {{ c.ritmo }}/s · {{ c.duracion_s }} s · {{ c.host }} · <a href="/carga/locust.html" target="_blank">reporte HTML de Locust</a></p>
+      <div class="kpis">
+        <div class="card kpi">
+          <div class="label">Resultado</div>
+          {% if c.aprobado %}<div class="gate ok"><span class="ico">✔</span>APROBADA</div>{% else %}<div class="gate ko"><span class="ico">✖</span>RECHAZADA</div>{% endif %}
+          <ul class="checks">
+            {% for k in c.checks %}<li><span class="{{ 'ok' if k.ok else 'ko' }}">{{ "✔" if k.ok else "✖" }}</span> {{ k.regla }} <span class="muted">({{ k.valor }})</span></li>{% endfor %}
+          </ul>
+        </div>
+        {% if agg %}
+        <div class="card kpi"><div class="label">Peticiones totales</div><div class="value">{{ agg.peticiones }}</div><div class="note">{{ agg.fallos }} fallidas</div></div>
+        <div class="card kpi"><div class="label">Throughput</div><div class="value">{{ agg.rps }}</div><div class="note">peticiones por segundo (RPS)</div></div>
+        <div class="card kpi"><div class="label">Latencia p95 global</div><div class="value">{{ agg.p95_ms | int }} ms</div><div class="note">mediana {{ agg.mediana_ms | int }} ms</div></div>
+        {% endif %}
+      </div>
+
+      {% set max_avg = (c.endpoints | rejectattr("nombre", "equalto", "Aggregated") | map(attribute="promedio_ms") | max) or 1 %}
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead><tr><th>Endpoint</th><th class="num">Peticiones</th><th class="num">Fallos</th><th class="num">Mediana</th><th style="min-width:160px">Promedio</th><th class="num">p95</th><th class="num">p99</th><th class="num">Máx</th><th class="num">RPS</th></tr></thead>
+          <tbody>
+          {% for e in c.endpoints if e.nombre != "Aggregated" %}
+            <tr>
+              <td><code>GET {{ e.nombre }}</code></td>
+              <td class="num">{{ e.peticiones }}</td>
+              <td class="num">{{ e.fallos }}</td>
+              <td class="num">{{ e.mediana_ms | int }} ms</td>
+              <td>{{ e.promedio_ms }} ms<div class="hbar" style="width: {{ (100 * e.promedio_ms / max_avg) | round(1) }}%"></div></td>
+              <td class="num">{{ e.p95_ms | int }} ms</td>
+              <td class="num">{{ e.p99_ms | int }} ms</td>
+              <td class="num">{{ e.max_ms | int }} ms</td>
+              <td class="num">{{ e.rps }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if c.serie | length > 1 %}
+      <div class="grid-2 even" style="margin-top:16px">
+        <div>
+          <h3>Peticiones por segundo</h3>
+          <div class="legend"><span><i style="background:var(--series-1)"></i>RPS</span><span><i style="background:var(--critical)"></i>Fallos/s</span></div>
+          <div class="chart-wrap"><svg id="chart-rps" width="100%" height="200" role="img" aria-label="Peticiones por segundo durante la prueba"></svg><div class="tooltip"></div></div>
+        </div>
+        <div>
+          <h3>Tiempo de respuesta (ms)</h3>
+          <div class="legend"><span><i style="background:var(--series-1)"></i>Mediana (p50)</span><span><i style="background:var(--series-2)"></i>Percentil 95</span></div>
+          <div class="chart-wrap"><svg id="chart-lat" width="100%" height="200" role="img" aria-label="Latencia p50 y p95 durante la prueba"></svg><div class="tooltip"></div></div>
+        </div>
+      </div>
+      {% endif %}
+    {% endif %}
+  </section>
+
+  {% if r.hay_datos %}
   <section class="grid-2">
     <!-- Historial -->
     <div class="card">
@@ -262,13 +372,14 @@
         </div>
         <div class="chart-wrap">
           <svg id="hist" width="100%" height="220" role="img" aria-label="Historial de tasa de éxito y cobertura"></svg>
-          <div id="tooltip"></div>
+          <div class="tooltip"></div>
         </div>
       {% endif %}
       <details style="margin-top:12px">
         <summary class="muted" style="cursor:pointer">Ver tabla</summary>
+        <div class="table-wrap">
         <table style="margin-top:8px">
-          <thead><tr><th>Fecha</th><th>Filtro</th><th class="num">Pruebas</th><th class="num">Éxito</th><th class="num">Cobertura</th><th>Gate</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Filtro</th><th class="num">Pruebas</th><th class="num">Éxito</th><th class="num">Cobertura</th><th class="num">Linter</th><th>Gate</th></tr></thead>
           <tbody>
           {% for h in r.historial | reverse %}
             <tr>
@@ -276,17 +387,20 @@
               <td class="num">{{ h.passed }}/{{ h.total }}</td>
               <td class="num">{{ h.tasa_exito }}%</td>
               <td class="num">{{ h.cobertura }}%</td>
+              <td class="num">{{ h.lint if h.lint is defined else "—" }}</td>
               <td><span class="badge {{ 'b-passed' if h.gate_aprobado else 'b-failed' }}">{{ "OK" if h.gate_aprobado else "FALLO" }}</span></td>
             </tr>
           {% endfor %}
           </tbody>
         </table>
+        </div>
       </details>
     </div>
 
     <!-- Cobertura por archivo -->
     <div class="card">
       <h2>Cobertura por módulo</h2>
+      <div class="table-wrap">
       <table>
         <thead><tr><th>Archivo</th><th class="num">Cobertura</th><th>Líneas sin probar</th></tr></thead>
         <tbody>
@@ -301,97 +415,134 @@
         {% endfor %}
         </tbody>
       </table>
+      </div>
     </div>
   </section>
   {% endif %}
 
   <section id="console-box" class="card" style="display:none">
-    <h2>Salida de la última ejecución</h2>
+    <h2 id="console-title">Salida de la última ejecución</h2>
     <pre class="console" id="console"></pre>
   </section>
 </div>
 
 <script>
 (function () {
-  const btn = document.getElementById("run");
+  const btns = [document.getElementById("run"), document.getElementById("run-load")];
   const sel = document.getElementById("filtro");
   try { const f = localStorage.getItem("filtro"); if (f) sel.value = f; } catch (e) {}
 
+  function ocupado(tipo) {
+    btns.forEach(b => b.disabled = true);
+    (tipo === "carga" ? btns[1] : btns[0]).textContent = "Ejecutando…";
+  }
   async function poll() {
     const r = await fetch("/api/estado").then(x => x.json());
     if (r.corriendo) { setTimeout(poll, 1000); return; }
     location.reload();
   }
+  async function lanzar(url, body, tipo) {
+    ocupado(tipo);
+    const res = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+    if (res.ok || res.status === 409) { poll(); return; }
+    const err = await res.json();
+    alert(typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail));
+    location.reload();
+  }
 
-  btn.addEventListener("click", async () => {
+  btns[0].addEventListener("click", () => {
     try { localStorage.setItem("filtro", sel.value); } catch (e) {}
-    btn.disabled = true; btn.textContent = "Ejecutando…";
-    const res = await fetch("/api/ejecutar", {
-      method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({filtro: sel.value})
-    });
-    if (res.status === 409 || res.ok) { poll(); }
-    else { btn.disabled = false; btn.textContent = "▶ Ejecutar pruebas"; alert((await res.json()).detail); }
+    lanzar("/api/ejecutar", {filtro: sel.value}, "pruebas");
+  });
+  btns[1].addEventListener("click", () => {
+    const n = id => parseInt(document.getElementById(id).value, 10);
+    lanzar("/api/carga", {usuarios: n("usuarios"), ritmo: n("ritmo"), duracion: n("duracion")}, "carga");
   });
 
   fetch("/api/estado").then(x => x.json()).then(r => {
-    if (r.corriendo) { btn.disabled = true; btn.textContent = "Ejecutando…"; poll(); }
+    if (r.corriendo) { ocupado(r.tipo); poll(); }
     if (r.salida) {
       document.getElementById("console-box").style.display = "block";
+      document.getElementById("console-title").textContent =
+        "Salida de la última ejecución (" + (r.tipo === "carga" ? "prueba de carga" : "pruebas") + ")";
       document.getElementById("console").textContent = r.salida;
     }
   });
 
-  // --- Gráfico de historial (SVG, un solo eje 0–100 %) ---
-  const data = {{ r.historial | tojson }};
-  const svg = document.getElementById("hist");
-  if (!svg || data.length < 2) return;
-  const tip = document.getElementById("tooltip");
+  // --- Gráfico de líneas genérico (SVG, un solo eje Y por gráfico) ---
   const NS = "http://www.w3.org/2000/svg";
   const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-  function draw() {
-    svg.innerHTML = "";
-    const W = svg.clientWidth, H = 220, m = {t: 10, r: 12, b: 24, l: 36};
-    const iw = W - m.l - m.r, ih = H - m.t - m.b;
-    const x = i => m.l + (data.length === 1 ? iw / 2 : i * iw / (data.length - 1));
-    const y = v => m.t + ih - (v / 100) * ih;
-    const css = getComputedStyle(document.documentElement);
-    const c = n => css.getPropertyValue(n).trim();
-
-    [0, 50, 80, 100].forEach(v => {
-      svg.appendChild(el("line", {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c(v === 80 ? "--text-muted" : "--grid"), "stroke-dasharray": v === 80 ? "4 4" : "", "stroke-width": 1}));
-      const t = el("text", {x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: c("--text-muted")});
-      t.textContent = v + "%"; svg.appendChild(t);
-    });
-
-    const series = [["tasa_exito", "--series-1"], ["cobertura", "--series-2"]];
-    series.forEach(([key, color]) => {
-      const pts = data.map((d, i) => `${x(i)},${y(d[key] ?? 0)}`).join(" ");
-      svg.appendChild(el("polyline", {points: pts, fill: "none", stroke: c(color), "stroke-width": 2, "stroke-linejoin": "round"}));
-      data.forEach((d, i) => svg.appendChild(el("circle", {cx: x(i), cy: y(d[key] ?? 0), r: 4, fill: c(color), stroke: c("--surface-1"), "stroke-width": 2})));
-    });
-
-    const cross = el("line", {y1: m.t, y2: m.t + ih, stroke: c("--text-muted"), "stroke-width": 1, visibility: "hidden"});
-    svg.appendChild(cross);
-    const hit = el("rect", {x: m.l, y: m.t, width: iw, height: ih, fill: "transparent"});
-    svg.appendChild(hit);
-    hit.addEventListener("mousemove", ev => {
-      const bx = svg.getBoundingClientRect();
-      const i = Math.max(0, Math.min(data.length - 1, Math.round((ev.clientX - bx.left - m.l) / (iw / (data.length - 1)))));
-      const d = data[i];
-      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
-      tip.innerHTML = `<strong>${d.fecha.replace("T", " ")}</strong><br>Filtro: ${d.filtro}<br>` +
-        `<span style="color:var(--series-1)">●</span> Éxito: ${d.tasa_exito}% (${d.passed}/${d.total})<br>` +
-        `<span style="color:var(--series-2)">●</span> Cobertura: ${d.cobertura}%<br>Gate: ${d.gate_aprobado ? "✔ aprobado" : "✖ rechazado"}`;
-      tip.style.display = "block";
-      const left = x(i) + 12 + tip.offsetWidth > W ? x(i) - tip.offsetWidth - 12 : x(i) + 12;
-      tip.style.left = left + "px"; tip.style.top = "10px";
-    });
-    hit.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+  function lineChart(svg, data, opts) {
+    if (!svg || data.length < 2) return;
+    const tip = svg.parentNode.querySelector(".tooltip");
+    function draw() {
+      svg.innerHTML = "";
+      const W = svg.clientWidth, H = +svg.getAttribute("height"), m = {t: 10, r: 12, b: 24, l: 44};
+      const iw = W - m.l - m.r, ih = H - m.t - m.b;
+      const maxV = opts.max || Math.max(1, ...data.flatMap(d => opts.series.map(s => d[s.key] || 0))) * 1.1;
+      const x = i => m.l + i * iw / (data.length - 1);
+      const y = v => m.t + ih - (v / maxV) * ih;
+      const ticks = opts.ticks || [0, maxV / 2, maxV].map(v => Math.round(v));
+      ticks.forEach(v => {
+        const ref = opts.ref === v;
+        svg.appendChild(el("line", {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: css(ref ? "--text-muted" : "--grid"), "stroke-dasharray": ref ? "4 4" : "", "stroke-width": 1}));
+        const t = el("text", {x: m.l - 6, y: y(v) + 4, "text-anchor": "end", "font-size": 11, fill: css("--text-muted")});
+        t.textContent = v + (opts.unit || ""); svg.appendChild(t);
+      });
+      if (opts.xLabel) {
+        [0, data.length - 1].forEach(i => {
+          const t = el("text", {x: x(i), y: H - 6, "text-anchor": i ? "end" : "start", "font-size": 11, fill: css("--text-muted")});
+          t.textContent = opts.xLabel(data[i]); svg.appendChild(t);
+        });
+      }
+      opts.series.forEach(s => {
+        const pts = data.map((d, i) => `${x(i)},${y(d[s.key] || 0)}`).join(" ");
+        svg.appendChild(el("polyline", {points: pts, fill: "none", stroke: css(s.color), "stroke-width": 2, "stroke-linejoin": "round"}));
+        if (data.length <= 40) data.forEach((d, i) => svg.appendChild(el("circle", {cx: x(i), cy: y(d[s.key] || 0), r: 4, fill: css(s.color), stroke: css("--surface-1"), "stroke-width": 2})));
+      });
+      const cross = el("line", {y1: m.t, y2: m.t + ih, stroke: css("--text-muted"), "stroke-width": 1, visibility: "hidden"});
+      svg.appendChild(cross);
+      const hit = el("rect", {x: m.l, y: m.t, width: iw, height: ih, fill: "transparent"});
+      svg.appendChild(hit);
+      hit.addEventListener("mousemove", ev => {
+        const bx = svg.getBoundingClientRect();
+        const i = Math.max(0, Math.min(data.length - 1, Math.round((ev.clientX - bx.left - m.l) / (iw / (data.length - 1)))));
+        cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+        tip.innerHTML = opts.tooltip(data[i]);
+        tip.style.display = "block";
+        tip.style.left = (x(i) + 12 + tip.offsetWidth > W ? x(i) - tip.offsetWidth - 12 : x(i) + 12) + "px";
+        tip.style.top = "10px";
+      });
+      hit.addEventListener("mouseleave", () => { tip.style.display = "none"; cross.setAttribute("visibility", "hidden"); });
+    }
+    draw();
+    window.addEventListener("resize", draw);
   }
-  draw();
-  window.addEventListener("resize", draw);
+
+  const hist = {{ r.historial | tojson }};
+  lineChart(document.getElementById("hist"), hist, {
+    max: 100, ticks: [0, 50, 80, 100], ref: 80, unit: "%",
+    series: [{key: "tasa_exito", color: "--series-1"}, {key: "cobertura", color: "--series-2"}],
+    tooltip: d => `<strong>${d.fecha.replace("T", " ")}</strong><br>Filtro: ${d.filtro}<br>` +
+      `<span style="color:var(--series-1)">●</span> Éxito: ${d.tasa_exito}% (${d.passed}/${d.total})<br>` +
+      `<span style="color:var(--series-2)">●</span> Cobertura: ${d.cobertura}%<br>` +
+      `Linter: ${d.lint ?? "—"} · Gate: ${d.gate_aprobado ? "✔ aprobado" : "✖ rechazado"}`
+  });
+
+  const serie = {{ (r.carga.serie if r.carga else []) | tojson }};
+  const seg = d => d.t + " s";
+  lineChart(document.getElementById("chart-rps"), serie, {
+    unit: "", xLabel: seg,
+    series: [{key: "rps", color: "--series-1"}, {key: "fallos_s", color: "--critical"}],
+    tooltip: d => `<strong>${d.t} s</strong> · ${d.usuarios} usuarios<br>RPS: ${d.rps}<br>Fallos/s: ${d.fallos_s}`
+  });
+  lineChart(document.getElementById("chart-lat"), serie, {
+    unit: "", xLabel: seg,
+    series: [{key: "p50_ms", color: "--series-1"}, {key: "p95_ms", color: "--series-2"}],
+    tooltip: d => `<strong>${d.t} s</strong> · ${d.usuarios} usuarios<br>p50: ${d.p50_ms} ms<br>p95: ${d.p95_ms} ms`
+  });
 })();
 </script>
 </body>
