@@ -13,6 +13,9 @@ flake8==7.5.0
 # --- Pruebas de carga (Semana 8) ---
 locust==2.47.0
 
+# --- Infraestructura como código: cliente AWS para LocalStack (Semana 10) ---
+boto3==1.44.5
+
 # --- APIs objetivo y Dashboard ---
 fastapi==0.125.0
 uvicorn==0.46.0

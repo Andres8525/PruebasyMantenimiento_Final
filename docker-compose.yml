@@ -72,3 +72,16 @@ services:
       - "8089:8089"
     depends_on:
       - api-carga
+
+  # Semana 10 — Nube AWS emulada (S3 + SQS) en el puerto 4566
+  #   docker compose --profile iac up -d localstack
+  #   python -m src.semana10.init_infra
+  localstack:
+    profiles: ["iac"]
+    container_name: localstack_lab10
+    image: localstack/localstack:3.8.1
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs
+      - AWS_DEFAULT_REGION=us-east-1
