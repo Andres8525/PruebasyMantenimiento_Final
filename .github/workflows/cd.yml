@@ -1,0 +1,59 @@
+# Semana 9 — Pipeline de Despliegue Continuo (CD).
+# Se dispara solo cuando el CI de main termina en verde (Regla de Oro: nada llega a
+# Producción sin pasar por Staging). También se puede lanzar a mano desde Actions
+# eligiendo el escenario: exitoso (200), fallo (500 -> rollback) o caido (sin servidor).
+#
+# Secrets necesarios (Settings -> Secrets and variables -> Actions):
+#   API_SECRET_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+# Sin los de Telegram el pipeline funciona igual y solo omite la alerta.
+name: Pipeline Despliegue Continuo (CD)
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline API Testing"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      escenario:
+        description: "Escenario a simular en Staging"
+        type: choice
+        options: [exitoso, fallo, caido]
+        default: exitoso
+
+permissions:
+  contents: read
+
+jobs:
+  continuous-deployment:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar Código Fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Configurar Entorno Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar Dependencias
+        run: python -m pip install -r requirements.txt
+
+      - name: Inyectar Secretos y Desplegar
+        env:
+          API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ESCENARIO: ${{ inputs.escenario || 'exitoso' }}
+        run: python scripts/run_deploy.py --escenario "$ESCENARIO"
+
+      - name: Publicar evidencia del despliegue
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: evidencia-despliegue
+          path: reports/despliegue/
