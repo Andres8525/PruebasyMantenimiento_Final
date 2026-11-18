@@ -1,0 +1,50 @@
+# Semana 7 — Quality Gate de SonarCloud (análisis estático profundo).
+# Requiere el secreto SONAR_TOKEN (Settings -> Secrets and variables -> Actions).
+# Las acciones están fijadas por SHA completo (regla "Use full commit SHA hash").
+name: Quality Gate - SonarCloud
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sonarcloud:
+    name: Analisis SonarCloud
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements.txt
+
+      # Genera coverage.xml y junit.xml para que SonarCloud muestre la cobertura.
+      # El veredicto de las pruebas lo da ci.yml; aquí solo se necesitan los reportes.
+      - name: Generar reportes de pruebas y cobertura
+        run: python scripts/run_tests.py
+        continue-on-error: true
+
+      - name: Aviso si falta SONAR_TOKEN
+        if: env.SONAR_TOKEN == ''
+        run: echo "::warning::SONAR_TOKEN no está configurado; se omite el análisis de SonarCloud."
+
+      - name: Analisis
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4 # v8.5.0
