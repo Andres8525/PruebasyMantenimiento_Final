@@ -1,12 +1,19 @@
-# --- Motor de pruebas (Semanas 1-3) ---
+# --- Motor de pruebas (Semanas 1-4) ---
 pytest==9.1.1
 pytest-cov==7.1.0
 
-# --- Pruebas de API (Semana 5) ---
+# --- Pruebas de API (Semanas 5-6) ---
 requests==2.33.1
 jsonschema==4.26.0
+httpx==0.28.1
 
-# --- API objetivo y Dashboard ---
+# --- Análisis estático (Semana 7) ---
+flake8==7.5.0
+
+# --- Pruebas de carga (Semana 8) ---
+locust==2.47.0
+
+# --- APIs objetivo y Dashboard ---
 fastapi==0.125.0
 uvicorn==0.46.0
 jinja2==3.1.6
