@@ -81,7 +81,11 @@ def index(request: Request):
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"r": reports.build_summary(), "filtros": sorted(FILTROS_VALIDOS), "umbrales_carga": reports.LOAD_P95_MS},
+        {
+            "r": reports.build_summary(),
+            "filtros": ["todas"] + [f"semana{k}" for k in reports.SEMANAS],
+            "umbrales_carga": reports.LOAD_P95_MS,
+        },
     )
 
 
