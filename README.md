@@ -145,6 +145,11 @@ Final_Devops/
 Cada tarjeta de semana indica su **componente del sistema**, la técnica del curso, qué demuestra, cómo leer
 el resultado, el comando para ejecutarla y sus pruebas.
 
+**Modo claro y oscuro.** Al abrir, el dashboard sigue el tema del sistema operativo. El botón junto a
+*Ejecutar pruebas* cambia entre claro y oscuro y recuerda la elección en el navegador; los gráficos se
+redibujan con los colores del tema. También se puede forzar desde la URL, útil para proyectar:
+`http://localhost:8090/?tema=light` o `http://localhost:8090/?tema=dark`.
+
 ## Comandos por semana
 
 ```powershell
