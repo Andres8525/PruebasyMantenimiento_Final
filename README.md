@@ -9,7 +9,7 @@ los conecta en un flujo DevOps completo: pruebas unitarias → cobertura → con
 continua → análisis estático → pruebas de carga → despliegue continuo con rollback → infraestructura
 como código. Un **Dashboard de Calidad** muestra todo en una sola página.
 
-Estado actual: **90 pruebas en 10 semanas**, cobertura **~98%**, **0 hallazgos** de flake8 y los
+Estado actual: **122 pruebas** (10 semanas + caso de uso Banca), cobertura **~98%**, **0 hallazgos** de flake8 y los
 pipelines de CI/CD en verde.
 
 ## Requisitos
@@ -52,8 +52,10 @@ python -m uvicorn dashboard.app:app --port 8090      # dashboard en http://local
 ```
 Final_Devops/
 ├── src/semanaN/              # Código de negocio, un paquete por semana (1-10)
+├── src/banca/                # Caso de uso Banca: política de crédito y API del servicio
 ├── tests/semanaN/            # Suites de Pytest, una carpeta por semana
-│   └── conftest.py           # marca cada prueba con su semana (-m semana4)
+│   ├── banca/                # caso de uso Banca: matriz de valores límite y API
+│   └── conftest.py           # marca cada prueba con su semana (-m semana4) o -m banca
 ├── load/locustfile.py        # Semana 8: enjambre de usuarios (75% /fast, 25% /slow)
 ├── dashboard/                # Dashboard de calidad (FastAPI + Jinja2)
 │   ├── app.py                # páginas y endpoints (ejecutar pruebas, carga, CD, IaC)
@@ -86,6 +88,7 @@ La página está organizada en el mismo orden en que se expone el proyecto:
 | Semanas 1-3 · Fundamentos de pruebas (expone Diego) | Tarjetas de las semanas 1 a 3 y la tabla de **cobertura por módulo** con las líneas sin probar |
 | Semanas 4-6 · Contenedores e integración continua (expone Jhoan) | Tarjetas de las semanas 4 a 6 y la tabla de workflows de GitHub Actions con enlace a sus ejecuciones |
 | Semanas 7-10 · Calidad, rendimiento y entrega (expone Edison) | Hallazgos de flake8, prueba de carga con Locust (tabla y gráficas), pipeline de despliegue con sus 3 escenarios e infraestructura en LocalStack |
+| Caso de uso: Banca | Regla vigente, garantía, flujo de protección, casos de uso, mapa de bordes, simulador y matriz de valores límite |
 | Historial | Tendencia de tasa de éxito y cobertura entre ejecuciones, con tabla detallada |
 
 Cada tarjeta de semana tiene el mismo formato: **Qué demuestra**, **Cómo leer el resultado**, el código
@@ -221,6 +224,43 @@ Con LocalStack arriba, las 2 pruebas de integración de `tests/semana10` dejan d
 completo por S3 (subir/leer un objeto) y SQS (enviar/recibir un mensaje). Se omitió `version: '3.8'` del
 manifiesto porque Docker Compose v2 lo marca como obsoleto.
 
+## Caso de uso aplicado: Banca (evaluación de crédito)
+
+**Garantía:** ningún cambio en las reglas de aprobación llega a Producción sin pasar las pruebas de valores límite.
+
+Un banco aprueba créditos automáticamente con la regla de la Semana 2: score entre 600 y 850 **y**
+ingresos mensuales de al menos 2,000.00. Un error de un centavo en el borde aprueba a quien no debía o
+rechaza a un cliente válido, por eso la regla queda protegida en tres niveles:
+
+1. **Matriz de valores límite** (`src/banca/politica.py`, casos B01 a B12): cada borde se prueba en el
+   límite (On point) y justo al lado (Off point), más los bordes del dominio y las entradas inválidas.
+2. **CI**: la matriz forma parte de la suite, así que un borde roto pone el Quality Gate en rojo.
+3. **Gate de reglas en el CD**: `scripts/run_deploy.py` vuelve a ejecutar la matriz **antes de Staging**.
+   Si un caso falla, el despliegue queda *Bloqueado por reglas*, Producción sigue en la versión estable y
+   se envía la alerta a Telegram con los casos que fallaron.
+
+| ID | Caso de uso | Actor | Evidencia |
+|---|---|---|---|
+| CU-B01 | Evaluar solicitud de crédito | Analista de crédito / canal digital | `POST /api/v1/creditos/evaluar` |
+| CU-B02 | Consultar la política vigente | Analista de riesgo | `GET /api/v1/creditos/politica` |
+| CU-B03 | Modificar una regla de aprobación | Desarrollador | `src/semana2/validador_credito.py` + `ci.yml` |
+| CU-B04 | Bloquear un despliegue que rompe un borde | Pipeline de CD | Gate de reglas en `scripts/run_deploy.py` |
+| CU-B05 | Notificar el bloqueo al equipo | Pipeline de CD → On-call | Alerta de Telegram |
+
+```powershell
+python -m pytest -m banca -v --no-cov                # 28 pruebas: matriz, motivos y contrato de la API
+python -m uvicorn src.banca.api:app --port 8002      # servicio de crédito (documentación en /docs)
+python scripts/run_deploy.py --escenario exitoso     # el gate de reglas corre antes del Smoke Test
+```
+
+En el dashboard, la sección **Caso de uso: Banca** muestra la regla vigente, el estado de la garantía, los
+casos de uso, el mapa de bordes, la matriz con el resultado de cada caso y un **simulador** que consulta el
+servicio real (montado en `/banca`).
+
+**Demostración del bloqueo:** cambia `ingresos >= 2000.0` por `ingresos > 2000.0` en
+`src/semana2/validador_credito.py` y ejecuta el despliegue. El pipeline se detiene en el paso 0 con
+`[BLOQUEADO] ... (casos B08)` y no llega a Staging. Deshaz el cambio al terminar.
+
 ## Quality Gate
 
 El build se aprueba solo si se cumplen las tres condiciones:
@@ -244,6 +284,7 @@ El despliegue tiene el suyo: el Smoke Test en Staging debe responder HTTP 200.
 | 6 | cualquiera de los anteriores + `git push` | el pipeline de GitHub Actions se pone rojo y el CD no se dispara |
 | 7 | agregar a `calculadora.py` una variable sin uso (`descuento_fantasma = 0.10`) | flake8 `F841` → Quality Gate rechazado |
 | 8 | subir `RETARDO_SLOW_SEGUNDOS` a `2` en `semana8/api.py` | prueba de carga: p95 de `/slow` supera el umbral |
+| Banca | `ingresos >= 2000.0` → `ingresos > 2000.0` en `validador_credito.py` | caso B08 falla → despliegue *Bloqueado por reglas* antes de Staging |
 | 9 | `IS_HEALTHY = False` en `semana9/main.py` | Smoke Test HTTP 500 → rollback automático y alerta en Telegram |
 | 10 | apagar LocalStack (`docker compose --profile iac down`) | el dashboard muestra "LocalStack no disponible" y las pruebas de integración se omiten |
 

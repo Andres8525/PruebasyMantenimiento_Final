@@ -10,6 +10,8 @@ import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from src.banca import politica as politica_banca
+
 ROOT = Path(__file__).resolve().parent.parent
 REPORTS_DIR = ROOT / "reports"
 LATEST_DIR = REPORTS_DIR / "latest"
@@ -196,7 +198,7 @@ def parse_junit(path: Path = JUNIT_FILE) -> list[dict]:
         semana = _SEMANA.search(clase)
         casos.append(
             {
-                "semana": semana.group(1) if semana else "otros",
+                "semana": semana.group(1) if semana else ("banca" if ".banca." in f".{clase}." else "otros"),
                 "archivo": clase.replace(".", "/") + ".py",
                 "funcion": funcion,
                 "parametros": params.rstrip("]"),
@@ -287,7 +289,8 @@ def build_summary() -> dict:
     tasa = round(100 * conteo["passed"] / ejecutadas, 1) if ejecutadas else 0.0
 
     semanas = []
-    claves = sorted({c["semana"] for c in casos} | set(SEMANAS), key=lambda s: (not s.isdigit(), s.zfill(3)))
+    claves = sorted({c["semana"] for c in casos if c["semana"] != "banca"} | set(SEMANAS),
+                    key=lambda s: (not s.isdigit(), s.zfill(3)))
     for clave in claves:
         propios = [c for c in casos if c["semana"] == clave]
         info = {**SEMANAS.get(clave, {"titulo": "Otras pruebas", "tecnica": "", "modulo": ""}),
@@ -333,6 +336,7 @@ def build_summary() -> dict:
         "repo_actions": REPO_ACTIONS_URL,
     }
     resumen["por_semana"] = {s["clave"]: s for s in semanas}
+    resumen["banca"] = resumen_banca(casos, resumen["despliegues"])
     resumen["etapas"] = calcular_etapas(resumen)
     return resumen
 
@@ -374,6 +378,59 @@ def calcular_etapas(resumen: dict) -> list[dict]:
                                  bool(despliegues) and despliegues[-1]["resultado"] == "PROMOCIONADO")},
         {"id": "etapa-iac", "nombre": "Infraestructura", "semanas": "Semana 10", "estado": "pendiente"},
     ]
+
+
+CASOS_DE_USO_BANCA = [
+    {"id": "CU-B01", "nombre": "Evaluar solicitud de crédito", "actor": "Analista de crédito / canal digital",
+     "descripcion": "Envía score e ingresos y recibe APROBADO o RECHAZADO con los motivos de la decisión.",
+     "evidencia": "POST /api/v1/creditos/evaluar · tests/banca/test_api_credito.py", "fuente": "api"},
+    {"id": "CU-B02", "nombre": "Consultar la política vigente", "actor": "Analista de riesgo",
+     "descripcion": "Consulta los bordes de la regla (score mínimo, dominio e ingreso mínimo) y su versión.",
+     "evidencia": "GET /api/v1/creditos/politica", "fuente": "api"},
+    {"id": "CU-B03", "nombre": "Modificar una regla de aprobación", "actor": "Desarrollador",
+     "descripcion": "Cambia la regla en el validador; el CI ejecuta la matriz de valores límite y el Quality Gate.",
+     "evidencia": "src/semana2/validador_credito.py · ci.yml", "fuente": "matriz"},
+    {"id": "CU-B04", "nombre": "Bloquear un despliegue que rompe un borde", "actor": "Pipeline de CD",
+     "descripcion": "Antes de Staging corre la matriz; si un caso falla, el cambio no llega a Producción.",
+     "evidencia": "Gate de reglas en scripts/run_deploy.py · cd.yml", "fuente": "gate"},
+    {"id": "CU-B05", "nombre": "Notificar el bloqueo al equipo", "actor": "Pipeline de CD → On-call",
+     "descripcion": "Envía a Telegram qué casos de valores límite fallaron y que Producción sigue estable.",
+     "evidencia": "MSG_REGLAS en src/semana9/deploy.py", "fuente": "gate"},
+]
+
+
+def resumen_banca(casos: list[dict], despliegues: list[dict]) -> dict:
+    """Une la matriz de valores límite con los resultados de la última ejecución."""
+    propios = [c for c in casos if c["semana"] == "banca"]
+    por_id = {c["parametros"]: c for c in propios if c["funcion"] == "test_matriz_valores_limite"}
+    matriz = []
+    for fila in politica_banca.MATRIZ_BVA:
+        caso = por_id.get(fila["id"])
+        matriz.append({**fila, "estado": caso["estado"] if caso else "pendiente",
+                       "detalle": caso["detalle"] if caso else ""})
+    fallidas = sum(1 for c in propios if c["estado"] in ("failed", "error"))
+    con_gate = [d for d in despliegues if d.get("gate_reglas")]
+    ultimo_gate = con_gate[-1] if con_gate else None
+
+    if not propios:
+        estado = "pendiente"
+    else:
+        estado = "fallo" if fallidas else "ok"
+    estado_gate = "pendiente" if not ultimo_gate else ("ok" if ultimo_gate["gate_reglas"] == "aprobado" else "fallo")
+    estados = {"api": estado, "matriz": estado, "gate": estado_gate}
+    return {
+        "politica": politica_banca.politica_vigente(),
+        "matriz": matriz,
+        "matriz_json": [{k: f[k] for k in ("id", "score", "ingresos", "esperado", "estado", "tipo")} for f in matriz],
+        "total": len(propios),
+        "aprobadas": sum(1 for c in propios if c["estado"] == "passed"),
+        "fallidas": fallidas,
+        "casos_bva_ok": sum(1 for f in matriz if f["estado"] == "passed"),
+        "estado": estado,
+        "ultimo_gate": ultimo_gate,
+        "casos_de_uso": [{**cu, "estado": estados[cu["fuente"]]} for cu in CASOS_DE_USO_BANCA],
+        "pruebas": propios,
+    }
 
 
 def load_history() -> list[dict]:

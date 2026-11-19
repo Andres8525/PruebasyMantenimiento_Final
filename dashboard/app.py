@@ -20,6 +20,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from dashboard import reports
+from src.banca.api import app as api_banca
 from src.semana10 import init_infra
 
 BASE = Path(__file__).resolve().parent
@@ -29,9 +30,11 @@ templates = Jinja2Templates(directory=BASE / "templates")
 reports.HTMLCOV_DIR.mkdir(parents=True, exist_ok=True)
 reports.LOAD_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/cobertura", StaticFiles(directory=reports.HTMLCOV_DIR, html=True, check_dir=False), name="cobertura")
+# Caso de uso Banca: el servicio de crédito real, usado por el simulador del dashboard
+app.mount("/banca", api_banca)
 app.mount("/carga", StaticFiles(directory=reports.LOAD_DIR, html=True, check_dir=False), name="carga")
 
-FILTROS_VALIDOS = {"todas"} | {f"semana{k}" for k in reports.SEMANAS}
+FILTROS_VALIDOS = {"todas", "banca"} | {f"semana{k}" for k in reports.SEMANAS}
 
 _estado = {"corriendo": False, "tipo": None, "inicio": None, "fin": None, "codigo": None, "salida": ""}
 _lock = threading.Lock()
@@ -83,7 +86,7 @@ def index(request: Request):
         "index.html",
         {
             "r": reports.build_summary(),
-            "filtros": ["todas"] + [f"semana{k}" for k in reports.SEMANAS],
+            "filtros": ["todas"] + [f"semana{k}" for k in reports.SEMANAS] + ["banca"],
             "umbrales_carga": reports.LOAD_P95_MS,
         },
     )
