@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard de Calidad</title>
+<title>Sistema de Crédito Bancario</title>
 <style>
   :root {
     color-scheme: light;
@@ -135,6 +135,7 @@
   .week-head { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 14px; align-items: start; }
   .week-num { width: 44px; height: 44px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 16px; }
   .week-title { font-size: 16px; font-weight: 650; margin: 0; }
+  .week-comp { font-size: 13px; color: var(--text-2); margin-top: 2px; }
   .week-tech { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
   .week-body { margin-top: 14px; display: grid; gap: 14px; }
   .explain { display: grid; gap: 10px; grid-template-columns: 1fr; }
@@ -179,6 +180,7 @@
   .zone-ticks { display: flex; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 4px; }
   .zone-ticks span { white-space: nowrap; }
   .borders { display: grid; gap: 10px; margin-top: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .borders { grid-template-columns: 1fr 1fr; } }
   .border-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--surface-2); }
   .border-card .k { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
   .border-row { display: grid; grid-template-columns: minmax(150px, 1fr) auto auto; gap: 12px; align-items: center; font-size: 12.5px; padding: 4px 0; border-top: 1px solid var(--grid); }
@@ -186,6 +188,14 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .chip { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); cursor: pointer; font-variant-numeric: tabular-nums; }
   .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .sim-form { display: grid; gap: 10px 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; }
+  .sim-form label { display: grid; gap: 4px; font-size: 12.5px; color: var(--text-2); }
+  .sim-form input[type=number] { width: 100%; }
+  .sim-form label.check { display: flex; gap: 8px; align-items: center; height: 34px; }
+  .sim-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .sim-grid { grid-template-columns: 2fr 3fr; } }
+  .sim-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin-top: 10px; font-size: 12.5px; }
+  .sim-facts div { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; background: var(--surface-2); border-radius: 6px; }
   .sim-result { margin-top: 14px; border: 1px solid var(--border); border-radius: 8px; padding: 14px; min-height: 96px; }
   .sim-decision { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
   .empty { padding: 14px; border: 1px dashed var(--border-strong); border-radius: 8px; color: var(--muted); }
@@ -214,7 +224,8 @@
     <div class="week-num">{{ s.clave }}</div>
     <div>
       <h3 class="week-title">Semana {{ s.clave }}: {{ s.titulo }}</h3>
-      <div class="week-tech">{{ s.tecnica }}</div>
+      <div class="week-comp">Componente del sistema: <strong>{{ s.componente }}</strong></div>
+      <div class="week-tech">Técnica: {{ s.tecnica }}</div>
     </div>
     <div>
       {% if s.total == 0 %}<span class="pill s-pendiente">Sin ejecutar</span>
@@ -264,21 +275,21 @@
   <div class="topbar-inner">
     <div class="topbar-row">
       <div class="brand">
-        <h1>Dashboard de Calidad</h1>
-        <p>Pruebas y Mantenimiento de Software · Proyecto Final DevOps · Universidad Cooperativa de Colombia</p>
+        <h1>Sistema de Crédito Bancario</h1>
+        <p>Dashboard de calidad · Pruebas y Mantenimiento de Software · Proyecto Final DevOps · Universidad Cooperativa de Colombia</p>
       </div>
       <div class="controls">
         <label for="filtro">Semana</label>
         <select id="filtro">
-          {% for f in filtros %}<option value="{{ f }}">{{ "Todas las semanas" if f == "todas" else "Caso de uso: Banca" if f == "banca" else f | replace("semana", "Semana ") }}</option>{% endfor %}
+          {% for f in filtros %}<option value="{{ f }}">{{ "Todas las semanas" if f == "todas" else "Sistema integrado (banca)" if f == "banca" else f | replace("semana", "Semana ") }}</option>{% endfor %}
         </select>
         <button id="run" class="btn btn-primary">Ejecutar pruebas</button>
       </div>
     </div>
     <nav class="nav" aria-label="Secciones">
       <a href="#resumen">Resumen</a>
+      <a href="#sistema">El sistema</a>
       {% for b in r.bloques %}<a href="#{{ b.id }}">Semanas {{ b.semanas[0] }}-{{ b.semanas[-1] }} · {{ b.titulo }}</a>{% endfor %}
-      <a href="#caso-banca">Caso de uso: Banca</a>
       <a href="#historial">Historial</a>
     </nav>
   </div>
@@ -321,10 +332,10 @@
       <div class="card pad">
         <h3 style="margin-bottom:8px">Cómo leer este tablero</h3>
         <ol class="howto">
+          <li>Todo el proyecto es un <strong>sistema de crédito bancario</strong>: cada semana del curso construyó y probó uno de sus componentes.</li>
           <li>El <strong>Quality Gate</strong> es el veredicto final: la entrega solo se aprueba si cumple sus tres condiciones.</li>
-          <li>El <strong>flujo DevOps</strong> muestra las etapas construidas durante el curso, en orden, con el estado de cada una.</li>
-          <li>Cada <strong>semana</strong> explica qué demuestra, cómo leer su resultado y con qué comando se ejecuta; abajo están sus pruebas.</li>
-          <li>Los botones ejecutan todo en vivo: pruebas, prueba de carga (Semana 8), despliegue (Semana 9) e infraestructura (Semana 10).</li>
+          <li><strong>El sistema</strong> muestra la regla del banco, los 12 casos de uso y un simulador donde una solicitud recorre todos los componentes.</li>
+          <li>Cada <strong>semana</strong> indica su componente, qué demuestra, cómo leer el resultado y con qué comando se ejecuta.</li>
         </ol>
       </div>
     </div>
@@ -373,6 +384,207 @@
         </div>
         {% endfor %}
       </div>
+    </div>
+  </section>
+
+  <!-- EL SISTEMA: CRÉDITO BANCARIO -->
+  {% set B = r.banca %}
+  {% set P = B.politica %}
+  <section class="block" id="sistema">
+    <div class="block-head">
+      <div><p class="eyebrow">El sistema</p><h2>Evaluación de solicitudes de crédito</h2></div>
+      <span class="pill s-{{ B.estado }}">{{ {"ok": "Reglas protegidas", "fallo": "Reglas con fallos", "pendiente": "Sin ejecutar"}[B.estado] }}</span>
+    </div>
+
+    <div class="intro">
+      <div class="card pad">
+        <h3 style="margin-bottom:6px">Contexto</h3>
+        <p class="muted" style="margin:0 0 12px">Un banco evalúa solicitudes de crédito de forma automática. Cada semana del curso construyó y probó uno de los componentes de este sistema, y el pipeline DevOps garantiza que ningún cambio defectuoso llegue a producción. Un error de un centavo o de un punto de score en el borde de una regla aprueba a quien no debía o rechaza a un cliente válido.</p>
+        <h4>Regla de aprobación vigente (política {{ P.version }})</h4>
+        <ul class="conditions" style="margin-top:0">
+          <li><span>Edad del solicitante</span><strong>18 a 65 años</strong></li>
+          <li><span>Score crediticio válido</span><strong>{{ P.score_dominio[0] }} a {{ P.score_dominio[1] }}</strong></li>
+          <li><span>Score mínimo de aprobación</span><strong>{{ P.score_minimo_aprobacion }}</strong></li>
+          <li><span>Ingreso mensual mínimo</span><strong>{{ "{:,.2f}".format(P.ingreso_minimo) }}</strong></li>
+          <li><span>Cuenta del cliente</span><strong>Activa</strong></li>
+        </ul>
+      </div>
+      <div class="card pad">
+        <h3 style="margin-bottom:6px">Garantía del sistema</h3>
+        <p class="guarantee">Ningún cambio en las reglas de aprobación llega a Producción sin pasar las pruebas de valores límite.</p>
+        <ul class="conditions">
+          <li><span>Matriz de valores límite de la regla</span><span class="pill {{ 's-ok' if B.casos_bva_ok == B.matriz | length else 's-fallo' if B.total else 's-pendiente' }}">{{ B.casos_bva_ok }} de {{ B.matriz | length }} casos</span></li>
+          <li><span>Pruebas del sistema integrado</span><span class="pill s-{{ B.estado }}">{{ B.aprobadas }} de {{ B.total }} aprobadas</span></li>
+          <li><span>Casos de uso verificados</span><span class="pill {{ 's-ok' if B.casos_de_uso | selectattr('estado', 'equalto', 'ok') | list | length == B.casos_de_uso | length else 's-fallo' }}">{{ B.casos_de_uso | selectattr("estado", "equalto", "ok") | list | length }} de {{ B.casos_de_uso | length }}</span></li>
+          <li><span>Gate de reglas en el último despliegue</span>
+            {% if not B.ultimo_gate %}<span class="pill s-pendiente">Sin ejecutar</span>
+            {% elif B.ultimo_gate.gate_reglas == "aprobado" %}<span class="pill s-ok">Aprobado · {{ B.ultimo_gate.fecha | replace("T", " ") }}</span>
+            {% else %}<span class="pill s-fallo">Bloqueó el despliegue · {{ B.ultimo_gate.fecha | replace("T", " ") }}</span>{% endif %}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Simulador de la solicitud completa -->
+    <div class="card pad">
+      <div class="panel-head" style="margin-bottom:4px">
+        <h3 style="margin:0">Recorrido de una solicitud de crédito</h3>
+        <span class="runline"><code>POST /banca/api/v1/creditos/solicitudes</code></span>
+      </div>
+      <p class="muted" style="margin:0 0 12px">Envía una solicitud al servicio real y muestra el veredicto de cada componente, semana por semana. Usa los escenarios para mostrar en vivo dónde y por qué se rechaza.</p>
+      <div class="sim-form">
+        <label>Edad <input type="number" id="s-edad" value="30" step="1"></label>
+        <label>Score <input type="number" id="s-score" value="720" step="1"></label>
+        <label>Ingresos mensuales <input type="number" id="s-ingresos" value="3000" step="0.01"></label>
+        <label>Monto solicitado <input type="number" id="s-monto" value="10000" step="0.01"></label>
+        <label>Puntualidad (%) <input type="number" id="s-puntualidad" value="95" step="0.1"></label>
+        <label class="check"><input type="checkbox" id="s-activa" checked> Cuenta activa</label>
+        <label class="check"><input type="checkbox" id="s-preferencial"> Cliente preferencial</label>
+        <label class="check"><input type="checkbox" id="s-nomina" checked> Cliente de nómina</label>
+        <button id="s-evaluar" class="btn btn-primary">Evaluar solicitud</button>
+      </div>
+      <div class="chips">
+        {% for nombre, d in [
+          ("Cliente ideal", {}),
+          ("Ingresos 1,999.99", {"ingresos": 1999.99}),
+          ("Ingresos 2,000.00", {"ingresos": 2000}),
+          ("Score 599", {"score": 599}),
+          ("Riesgo medio sin nómina", {"score": 650, "puntualidad": 92, "nomina": false}),
+          ("Menor de edad (17)", {"edad": 17}),
+          ("Mayor de 65 (66)", {"edad": 66}),
+          ("Cuenta inactiva", {"activa": false})] %}
+          <button class="chip" data-escenario='{{ d | tojson }}'>{{ nombre }}</button>
+        {% endfor %}
+      </div>
+      <div id="s-resultado" class="sim-result"><span class="muted">Elige un escenario o completa la solicitud y pulsa Evaluar solicitud.</span></div>
+    </div>
+
+    <!-- Casos de uso -->
+    <div class="card pad" style="margin-top:12px">
+      <h3>Casos de uso del sistema</h3>
+      <p class="muted" style="margin:4px 0 0">Cada caso de uso se implementó en una semana del curso; su estado sale de las pruebas de esa semana.</p>
+      <div class="table-wrap" style="margin-top:8px">
+        <table>
+          <thead><tr><th>ID</th><th>Caso de uso</th><th>Actor</th><th>Semana</th><th>Evidencia</th><th>Estado</th></tr></thead>
+          <tbody>
+          {% for cu in B.casos_de_uso %}
+            <tr>
+              <td style="white-space:nowrap"><strong>{{ cu.id }}</strong></td>
+              <td>{{ cu.nombre }}</td>
+              <td>{{ cu.actor }}</td>
+              <td style="white-space:nowrap">{% if cu.semana is string and cu.semana.isdigit() %}<a href="#semana-{{ cu.semana }}">Semana {{ cu.semana }}</a>{% else %}Semanas {{ cu.semana }}{% endif %}</td>
+              <td><code>{{ cu.evidencia }}</code></td>
+              <td><span class="pill s-{{ cu.estado }}">{{ {"ok": "Verificado", "fallo": "Con fallos", "pendiente": "Sin ejecutar"}[cu.estado] }}</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card pad" style="margin-top:12px">
+      <h3>Cómo se protege la regla de aprobación</h3>
+      <p class="muted" style="margin:4px 0 0">Si un caso falla en los pasos 2 a 4, el cambio se detiene, Producción sigue en la versión estable y el equipo recibe la alerta en Telegram.</p>
+      <div class="flow">
+        {% for paso in [
+          ("Cambio en la regla", "Desarrollador edita el validador"),
+          ("Matriz de valores límite", "CI ejecuta los 12 casos"),
+          ("Quality Gate", "0 fallos, cobertura y linter"),
+          ("Gate de reglas en CD", "Se repite antes de Staging"),
+          ("Smoke Test en Staging", "HTTP 200 en /health"),
+          ("Producción", "Política publicada")] %}
+        <div class="step e-{{ B.estado if loop.index <= 4 else 'ok' if B.estado == 'ok' else 'pendiente' }}">
+          <div class="step-num">PASO {{ loop.index }}</div>
+          <div class="step-name">{{ paso[0] }}</div>
+          <div class="step-weeks">{{ paso[1] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card pad" style="margin-top:12px">
+      <h3>Mapa de bordes de la regla</h3>
+      <p class="muted" style="margin:4px 0 12px">Cada borde se prueba exactamente en el límite (On point) y justo al lado (Off point).</p>
+      <div class="grid-2">
+        <div>
+          <h4>Score</h4>
+          <div class="zones">
+            <div class="zone z-out" style="flex:1">Fuera</div>
+            <div class="zone z-no" style="flex:3">Rechazado</div>
+            <div class="zone z-yes" style="flex:2.5">Aprobado</div>
+            <div class="zone z-out" style="flex:1">Fuera</div>
+          </div>
+          <div class="zone-ticks"><span style="flex:1"></span><span style="flex:3">{{ P.score_dominio[0] }}</span><span style="flex:2.5">{{ P.score_minimo_aprobacion }}</span><span style="flex:1">{{ P.score_dominio[1] }}</span></div>
+        </div>
+        <div>
+          <h4>Ingresos mensuales</h4>
+          <div class="zones">
+            <div class="zone z-out" style="flex:1">Negativo</div>
+            <div class="zone z-no" style="flex:3">Rechazado</div>
+            <div class="zone z-yes" style="flex:3.5">Aprobado</div>
+          </div>
+          <div class="zone-ticks"><span style="flex:1"></span><span style="flex:3">0.00</span><span style="flex:3.5">{{ "{:,.2f}".format(P.ingreso_minimo) }}</span></div>
+        </div>
+      </div>
+      <div class="borders">
+        {% for regla in ["Score mínimo de aprobación", "Ingreso mínimo", "Dominio del score", "Dominio de ingresos"] %}
+        <div class="border-card">
+          <div class="k">{{ regla }}</div>
+          {% for f in B.matriz if f.regla == regla %}
+            <div class="border-row">
+              <span><strong>{{ f.id }}</strong> {{ f.tipo }}</span>
+              <span class="muted">{{ valor(f.score) }} / {{ valor(f.ingresos, True) }} &nbsp;espera {{ ESPERADO[f.esperado] }}</span>
+              {{ cumple(f.estado) }}
+            </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card pad" style="margin-top:12px">
+      <div class="panel-head" style="margin-bottom:6px">
+        <h3 style="margin:0">Matriz de valores límite</h3>
+        <span class="runline">Ejecutar: <code>python -m pytest -m banca -v --no-cov</code></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Regla</th><th>Tipo de punto</th><th class="num">Score</th><th class="num">Ingresos</th><th>Resultado esperado</th><th>Prueba</th></tr></thead>
+          <tbody>
+          {% for f in B.matriz %}
+            <tr>
+              <td><strong>{{ f.id }}</strong></td>
+              <td>{{ f.regla }}</td>
+              <td>{{ f.tipo }}</td>
+              <td class="num"><code>{{ valor(f.score) }}</code></td>
+              <td class="num"><code>{{ valor(f.ingresos, True) }}</code></td>
+              <td>{{ ESPERADO[f.esperado] }}</td>
+              <td>{{ cumple(f.estado) }}{% if f.detalle %}<pre class="fail">{{ f.detalle }}</pre>{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if B.pruebas %}
+      <details class="tests" style="margin-top:10px">
+        <summary>Ver las {{ B.total }} pruebas del sistema integrado</summary>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Prueba</th><th>Datos de entrada</th><th>Estado</th><th class="num">Tiempo</th></tr></thead>
+            <tbody>
+            {% for c in B.pruebas %}
+              <tr>
+                <td><code>{{ c.funcion }}</code><div class="muted" style="font-size:12px">{{ c.archivo }}</div></td>
+                <td>{% if c.parametros %}<code>{{ c.parametros }}</code>{% else %}<span class="muted">-</span>{% endif %}</td>
+                <td><span class="pill s-{{ c.estado }}">{{ estado_caso(c.estado) }}</span></td>
+                <td class="num">{{ "%.3f" | format(c.tiempo) }} s</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      {% endif %}
     </div>
   </section>
 
@@ -553,14 +765,14 @@
           <div class="controls">
             <label for="escenario">Escenario</label>
             <select id="escenario">
-              <option value="exitoso">Caso A: Staging sano (HTTP 200)</option>
-              <option value="fallo">Caso B: error en Staging (HTTP 500)</option>
+              <option value="exitoso">Caso A: servicio de crédito sano (HTTP 200)</option>
+              <option value="fallo">Caso B: error en el servicio de crédito (HTTP 500)</option>
               <option value="caido">Servidor de Staging apagado</option>
             </select>
             <button id="run-deploy" class="btn btn-primary">Ejecutar despliegue</button>
           </div>
         </div>
-        <p class="muted" style="margin:0 0 12px">Secuencia: commit, pipeline CD, Smoke Test en Staging, promoción o rollback, notificación a Telegram.</p>
+        <p class="muted" style="margin:0 0 12px">Secuencia: commit, gate de reglas de crédito, Smoke Test en Staging, promoción o rollback, notificación a Telegram.</p>
         {% if not r.despliegues %}
           <div class="empty">Aún no hay despliegues. Elige un escenario y pulsa Ejecutar despliegue.</div>
         {% else %}
@@ -610,182 +822,6 @@
       </div>
       {% endcall %}
 
-    </div>
-  </section>
-
-  <!-- CASO DE USO: BANCA -->
-  {% set B = r.banca %}
-  {% set P = B.politica %}
-  <section class="block" id="caso-banca">
-    <div class="block-head">
-      <div><p class="eyebrow">Caso de uso aplicado</p><h2>Banca: evaluación de crédito</h2></div>
-      <span class="pill s-{{ B.estado }}">{{ {"ok": "Regla protegida", "fallo": "Regla con fallos", "pendiente": "Sin ejecutar"}[B.estado] }}</span>
-    </div>
-
-    <div class="intro">
-      <div class="card pad">
-        <h3 style="margin-bottom:6px">Contexto</h3>
-        <p class="muted" style="margin:0 0 12px">Un banco aprueba créditos de forma automática. Un error de un centavo o de un punto de score en el borde de la regla aprueba a quien no debía o rechaza a un cliente válido. El validador de la Semana 2 toma la decisión y este caso de uso lo convierte en un servicio protegido por el pipeline.</p>
-        <h4>Regla de negocio vigente (política {{ P.version }})</h4>
-        <ul class="conditions" style="margin-top:0">
-          <li><span>Score válido</span><strong>{{ P.score_dominio[0] }} a {{ P.score_dominio[1] }}</strong></li>
-          <li><span>Score mínimo de aprobación</span><strong>{{ P.score_minimo_aprobacion }}</strong></li>
-          <li><span>Ingreso mensual mínimo</span><strong>{{ "{:,.2f}".format(P.ingreso_minimo) }}</strong></li>
-          <li><span>Decisión</span><strong>Aprobado solo si cumple ambas</strong></li>
-        </ul>
-      </div>
-      <div class="card pad">
-        <h3 style="margin-bottom:6px">Garantía del caso de uso</h3>
-        <p class="guarantee">Ningún cambio en las reglas de aprobación llega a Producción sin pasar las pruebas de valores límite.</p>
-        <ul class="conditions">
-          <li><span>Matriz de valores límite</span><span class="pill {{ 's-ok' if B.casos_bva_ok == B.matriz | length else 's-fallo' if B.total else 's-pendiente' }}">{{ B.casos_bva_ok }} de {{ B.matriz | length }} casos</span></li>
-          <li><span>Pruebas del caso de uso (matriz, motivos y API)</span><span class="pill s-{{ B.estado }}">{{ B.aprobadas }} de {{ B.total }} aprobadas</span></li>
-          <li><span>Gate de reglas en el último despliegue</span>
-            {% if not B.ultimo_gate %}<span class="pill s-pendiente">Sin ejecutar</span>
-            {% elif B.ultimo_gate.gate_reglas == "aprobado" %}<span class="pill s-ok">Aprobado · {{ B.ultimo_gate.fecha | replace("T", " ") }}</span>
-            {% else %}<span class="pill s-fallo">Bloqueó el despliegue · {{ B.ultimo_gate.fecha | replace("T", " ") }}</span>{% endif %}
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card pad">
-      <h3>Cómo se protege la regla</h3>
-      <p class="muted" style="margin:4px 0 0">Si un caso falla en los pasos 2 a 4, el cambio se detiene, Producción sigue en la versión estable y el equipo recibe la alerta en Telegram.</p>
-      <div class="flow">
-        {% for paso in [
-          ("Cambio en la regla", "Desarrollador edita el validador"),
-          ("Matriz de valores límite", "CI ejecuta los 12 casos"),
-          ("Quality Gate", "0 fallos, cobertura y linter"),
-          ("Gate de reglas en CD", "Se repite antes de Staging"),
-          ("Smoke Test en Staging", "HTTP 200 en /health"),
-          ("Producción", "Política publicada")] %}
-        <div class="step e-{{ B.estado if loop.index <= 4 else 'ok' if B.estado == 'ok' else 'pendiente' }}">
-          <div class="step-num">PASO {{ loop.index }}</div>
-          <div class="step-name">{{ paso[0] }}</div>
-          <div class="step-weeks">{{ paso[1] }}</div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div class="card pad" style="margin-top:12px">
-      <h3>Casos de uso</h3>
-      <div class="table-wrap" style="margin-top:8px">
-        <table>
-          <thead><tr><th>ID</th><th>Caso de uso</th><th>Actor</th><th>Descripción</th><th>Evidencia</th><th>Estado</th></tr></thead>
-          <tbody>
-          {% for cu in B.casos_de_uso %}
-            <tr>
-              <td style="white-space:nowrap"><strong>{{ cu.id }}</strong></td>
-              <td>{{ cu.nombre }}</td>
-              <td>{{ cu.actor }}</td>
-              <td class="muted">{{ cu.descripcion }}</td>
-              <td><code>{{ cu.evidencia }}</code></td>
-              <td><span class="pill s-{{ cu.estado }}">{{ {"ok": "Verificado", "fallo": "Con fallos", "pendiente": "Sin ejecutar"}[cu.estado] }}</span></td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="grid-2" style="margin-top:12px">
-      <div class="card pad">
-        <h3>Mapa de bordes de la regla</h3>
-        <p class="muted" style="margin:4px 0 12px">Cada borde se prueba exactamente en el límite (On point) y justo al lado (Off point).</p>
-        <h4>Score</h4>
-        <div class="zones">
-          <div class="zone z-out" style="flex:1">Fuera</div>
-          <div class="zone z-no" style="flex:3">Rechazado</div>
-          <div class="zone z-yes" style="flex:2.5">Aprobado</div>
-          <div class="zone z-out" style="flex:1">Fuera</div>
-        </div>
-        <div class="zone-ticks"><span style="flex:1"></span><span style="flex:3">{{ P.score_dominio[0] }}</span><span style="flex:2.5">{{ P.score_minimo_aprobacion }}</span><span style="flex:1">{{ P.score_dominio[1] }}</span></div>
-        <h4 style="margin-top:16px">Ingresos mensuales</h4>
-        <div class="zones">
-          <div class="zone z-out" style="flex:1">Negativo</div>
-          <div class="zone z-no" style="flex:3">Rechazado</div>
-          <div class="zone z-yes" style="flex:3.5">Aprobado</div>
-        </div>
-        <div class="zone-ticks"><span style="flex:1"></span><span style="flex:3">0.00</span><span style="flex:3.5">{{ "{:,.2f}".format(P.ingreso_minimo) }}</span></div>
-
-        <div class="borders">
-          {% for regla in ["Score mínimo de aprobación", "Ingreso mínimo", "Dominio del score", "Dominio de ingresos"] %}
-          <div class="border-card">
-            <div class="k">{{ regla }}</div>
-            {% for f in B.matriz if f.regla == regla %}
-              <div class="border-row">
-                <span><strong>{{ f.id }}</strong> {{ f.tipo }}</span>
-                <span class="muted">{{ valor(f.score) }} / {{ valor(f.ingresos, True) }} &nbsp;espera {{ ESPERADO[f.esperado] }}</span>
-                {{ cumple(f.estado) }}
-              </div>
-            {% endfor %}
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="card pad">
-        <h3>Simulador de solicitudes</h3>
-        <p class="muted" style="margin:4px 0 12px">Consulta en vivo el servicio de crédito real (<code>POST /banca/api/v1/creditos/evaluar</code>). Usa los botones para probar los bordes.</p>
-        <div class="controls">
-          <label>Score <input type="number" id="b-score" value="600" step="1"></label>
-          <label>Ingresos <input type="number" id="b-ingresos" value="2000" step="0.01" style="width:120px"></label>
-          <button id="b-evaluar" class="btn btn-primary">Evaluar solicitud</button>
-        </div>
-        <div class="chips">
-          {% for s, i in [(599, 2500), (600, 2500), (700, 1999.99), (700, 2000), (851, 3000)] %}
-            <button class="chip" data-score="{{ s }}" data-ingresos="{{ i }}">{{ s }} / {{ i }}</button>
-          {% endfor %}
-        </div>
-        <div id="b-resultado" class="sim-result"><span class="muted">Ingresa una solicitud y pulsa Evaluar solicitud.</span></div>
-      </div>
-    </div>
-
-    <div class="card pad" style="margin-top:12px">
-      <div class="panel-head" style="margin-bottom:6px">
-        <h3 style="margin:0">Matriz de valores límite</h3>
-        <span class="runline">Ejecutar: <code>python -m pytest -m banca -v --no-cov</code></span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>ID</th><th>Regla</th><th>Tipo de punto</th><th class="num">Score</th><th class="num">Ingresos</th><th>Resultado esperado</th><th>Prueba</th></tr></thead>
-          <tbody>
-          {% for f in B.matriz %}
-            <tr>
-              <td><strong>{{ f.id }}</strong></td>
-              <td>{{ f.regla }}</td>
-              <td>{{ f.tipo }}</td>
-              <td class="num"><code>{{ valor(f.score) }}</code></td>
-              <td class="num"><code>{{ valor(f.ingresos, True) }}</code></td>
-              <td>{{ ESPERADO[f.esperado] }}</td>
-              <td>{{ cumple(f.estado) }}{% if f.detalle %}<pre class="fail">{{ f.detalle }}</pre>{% endif %}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% if B.pruebas %}
-      <details class="tests" style="margin-top:10px">
-        <summary>Ver las {{ B.total }} pruebas del caso de uso</summary>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Prueba</th><th>Datos de entrada</th><th>Estado</th><th class="num">Tiempo</th></tr></thead>
-            <tbody>
-            {% for c in B.pruebas %}
-              <tr>
-                <td><code>{{ c.funcion }}</code><div class="muted" style="font-size:12px">{{ c.archivo }}</div></td>
-                <td>{% if c.parametros %}<code>{{ c.parametros }}</code>{% else %}<span class="muted">-</span>{% endif %}</td>
-                <td><span class="pill s-{{ c.estado }}">{{ estado_caso(c.estado) }}</span></td>
-                <td class="num">{{ "%.3f" | format(c.tiempo) }} s</td>
-              </tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </details>
-      {% endif %}
     </div>
   </section>
 
@@ -894,7 +930,7 @@
       `<div class="table-wrap"><table><thead><tr><th>Servicio</th><th>Recursos</th></tr></thead><tbody>` +
       `<tr><td>Buckets S3</td><td>${lista(d.buckets)}</td></tr>` +
       `<tr><td>Colas SQS</td><td>${lista(d.colas)}</td></tr></tbody></table></div>`;
-    const completo = d.buckets.includes("mi-bucket-pruebas") && d.colas.includes("cola-notificaciones");
+    const completo = d.buckets.includes("banco-solicitudes-credito") && d.colas.includes("cola-decisiones-credito");
     marcarEtapa(completo ? "ok" : "pendiente", completo ? "Correcto" : "Sin aprovisionar");
   }
   async function iac(metodo, url) {
@@ -905,33 +941,58 @@
   document.getElementById("iac-run").addEventListener("click", () => iac("POST", "/api/iac/aprovisionar"));
   iac("GET", "/api/iac");
 
-  // --- Caso de uso Banca: simulador contra el servicio de crédito real ---
-  const bRes = document.getElementById("b-resultado");
-  async function evaluarCredito() {
-    const score = Number(document.getElementById("b-score").value);
-    const ingresos = Number(document.getElementById("b-ingresos").value);
-    bRes.innerHTML = '<span class="muted">Evaluando...</span>';
-    const res = await fetch("/banca/api/v1/creditos/evaluar", {
-      method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({score: Number.isInteger(score) ? score : String(score), ingresos})
+  // --- El sistema: recorrido de una solicitud completa contra el servicio real ---
+  const sRes = document.getElementById("s-resultado");
+  const campo = id => document.getElementById("s-" + id);
+  const BASE = {edad: 30, score: 720, ingresos: 3000, monto: 10000, puntualidad: 95, activa: true, preferencial: false, nomina: true};
+  const dinero = v => Number(v).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  function cargarEscenario(cambios) {
+    const d = {...BASE, ...cambios};
+    ["edad", "score", "ingresos", "monto", "puntualidad"].forEach(k => campo(k).value = d[k]);
+    campo("activa").checked = d.activa; campo("preferencial").checked = d.preferencial; campo("nomina").checked = d.nomina;
+  }
+  async function evaluarSolicitud() {
+    const num = k => Number(campo(k).value);
+    const entero = k => Number.isInteger(num(k)) ? num(k) : String(campo(k).value);
+    const cuerpo = {
+      edad: entero("edad"), score: entero("score"), ingresos: num("ingresos"), monto: num("monto"),
+      puntualidad: num("puntualidad"), cuenta_activa: campo("activa").checked,
+      es_preferencial: campo("preferencial").checked, es_cliente_nomina: campo("nomina").checked
+    };
+    sRes.innerHTML = '<span class="muted">Evaluando...</span>';
+    const res = await fetch("/banca/api/v1/creditos/solicitudes", {
+      method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(cuerpo)
     });
     const d = await res.json();
     if (!res.ok) {
       const motivo = typeof d.detail === "string" ? d.detail : "Datos con formato inválido.";
-      bRes.innerHTML = `<div class="sim-decision" style="color:var(--pend)">Solicitud inválida</div>` +
+      sRes.innerHTML = `<div class="sim-decision" style="color:var(--pend)">Solicitud inválida</div>` +
         `<p class="muted" style="margin:6px 0 0">HTTP ${res.status} · ${esc(motivo)}</p>`;
       return;
     }
     const ok = d.decision === "APROBADO";
-    bRes.innerHTML = `<div class="sim-decision" style="color:var(${ok ? "--good" : "--bad"})">${ok ? "Aprobado" : "Rechazado"}</div>` +
+    const filas = d.pasos.map(p => `<tr><td style="white-space:nowrap"><a href="#semana-${p.semana}">Semana ${p.semana}</a></td>` +
+      `<td>${esc(p.componente)}</td><td><code>${esc(p.resultado)}</code></td>` +
+      `<td><span class="pill ${p.ok ? "s-ok" : "s-fallo"}">${p.ok ? "Acepta" : "Rechaza"}</span></td></tr>`).join("");
+    sRes.innerHTML = `<div class="sim-grid"><div>` +
+      `<div class="muted" style="font-size:12.5px">Decisión del banco</div>` +
+      `<div class="sim-decision" style="color:var(${ok ? "--good" : "--bad"})">${ok ? "Crédito aprobado" : "Crédito rechazado"}</div>` +
       `<ul class="howto" style="margin:8px 0">${d.motivos.map(m => `<li>${esc(m)}</li>`).join("")}</ul>` +
-      `<div class="muted" style="font-size:12px">Score ${esc(d.score)} · Ingresos ${esc(d.ingresos)} · Política ${esc(d.politica)}</div>`;
+      `<div class="sim-facts">` +
+      `<div><span>Nivel de riesgo</span><strong>${esc(d.nivel_riesgo)}</strong></div>` +
+      `<div><span>Tasa base</span><strong>${(d.tasa_base * 100).toFixed(1)}%</strong></div>` +
+      `<div><span>Descuento</span><strong>${d.descuento_tasa}%</strong></div>` +
+      `<div><span>Tasa final</span><strong>${(d.tasa_final * 100).toFixed(2)}%</strong></div>` +
+      `<div><span>Monto</span><strong>${dinero(d.monto)}</strong></div>` +
+      `<div><span>Total a pagar</span><strong>${d.total_a_pagar === null ? "No aplica" : dinero(d.total_a_pagar)}</strong></div>` +
+      `</div><div class="muted" style="font-size:12px;margin-top:8px">Política ${esc(d.politica)}</div></div>` +
+      `<div class="table-wrap"><table><thead><tr><th>Semana</th><th>Componente</th><th>Resultado</th><th>Veredicto</th></tr></thead>` +
+      `<tbody>${filas}</tbody></table></div></div>`;
   }
-  document.getElementById("b-evaluar").addEventListener("click", evaluarCredito);
-  document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => {
-    document.getElementById("b-score").value = c.dataset.score;
-    document.getElementById("b-ingresos").value = c.dataset.ingresos;
-    evaluarCredito();
+  campo("evaluar").addEventListener("click", evaluarSolicitud);
+  document.querySelectorAll(".chip[data-escenario]").forEach(c => c.addEventListener("click", () => {
+    cargarEscenario(JSON.parse(c.dataset.escenario));
+    evaluarSolicitud();
   }));
 
   fetch("/api/estado").then(x => x.json()).then(r => {

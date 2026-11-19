@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from src.banca import politica as politica_banca
+from src.banca.casos_de_uso import CASOS_DE_USO
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORTS_DIR = ROOT / "reports"
@@ -76,7 +77,7 @@ SEMANAS = {
     },
     "8": {
         "titulo": "Pruebas de Carga con Locust",
-        "tecnica": "Enjambre de usuarios concurrentes, latencia y RPS",
+        "tecnica": "Enjambre de clientes concurrentes, latencia y RPS",
         "modulo": "src/semana8/api.py",
     },
     "9": {
@@ -91,74 +92,86 @@ SEMANAS = {
     },
 }
 
-# Textos explicativos por semana: qué demuestra, cómo leer sus resultados y cómo ejecutarla
+# Textos explicativos por semana: componente del sistema de crédito, qué demuestra,
+# cómo leer sus resultados y cómo ejecutarla
 DETALLES = {
     "1": {
-        "objetivo": "Comprueba la regla de acceso (18 años o más) con pruebas escritas en tres pasos: "
-                    "preparar los datos, ejecutar la función y verificar el resultado (patrón AAA).",
-        "lectura": "Cada fila es una prueba. Aprobada significa que la función devolvió lo esperado; "
+        "componente": "Verificación del solicitante",
+        "objetivo": "Comprueba que solo un mayor de edad (18 años o más) pueda solicitar crédito, con pruebas "
+                    "escritas en tres pasos: preparar los datos, ejecutar la función y verificar el resultado.",
+        "lectura": "Cada fila es una prueba. Aprobada significa que el componente devolvió lo esperado; "
                    "fallida muestra el valor obtenido y el motivo.",
         "comando": "python -m pytest -m semana1 -v --no-cov",
     },
     "2": {
-        "objetivo": "Prueba los bordes de cada regla (17/18, 65/66, 599/600, 2.9/3.0) y las entradas inválidas. "
-                    "Una sola función de prueba recibe muchos datos gracias a la parametrización.",
+        "componente": "Regla de aprobación, edad financiable y nivel de riesgo",
+        "objetivo": "Prueba los bordes de cada regla del banco: score 599/600, ingresos 1,999.99/2,000.00, "
+                    "edad 17/18 y 65/66, y los cortes de riesgo 579/580 y 699/700.",
         "lectura": "La columna Datos de entrada muestra los valores de cada caso. Los casos de error verifican "
-                   "que la función rechace negativos, texto o valores fuera de rango.",
+                   "que el sistema rechace negativos, texto o valores fuera de rango.",
         "comando": "python -m pytest -m semana2 -v --no-cov",
     },
     "3": {
-        "objetivo": "Mide qué porcentaje del código ejecutan las pruebas. Si queda por debajo del 80%, "
-                    "el Quality Gate rechaza la entrega aunque todas las pruebas pasen.",
+        "componente": "Perfil del cliente",
+        "objetivo": "El perfil tiene 5 caminos (cuenta inactiva, menor con o sin perfil preferencial, adulto "
+                    "preferencial o estándar). La cobertura demuestra que las pruebas recorren todos.",
         "lectura": "La barra de cada módulo indica su cobertura; la columna Líneas sin probar señala "
-                   "el código que ninguna prueba ejecutó.",
+                   "el código del sistema que ninguna prueba ejecutó.",
         "comando": "python scripts/run_tests.py -m semana1   (demostración del rechazo)",
     },
     "4": {
-        "objetivo": "Las pruebas se empaquetan en la imagen inmutable qa-runner y se ejecutan en un contenedor "
-                    "efímero. Código de salida 0 significa listo para integrarse.",
+        "componente": "Descuento sobre la tasa de interés",
+        "objetivo": "El componente que premia la puntualidad y la nómina se prueba dentro de la imagen inmutable "
+                    "qa-runner. Código de salida 0 significa listo para integrarse.",
         "lectura": "Los resultados son los mismos en cualquier máquina porque el entorno viaja dentro de la imagen.",
         "comando": "docker build -f docker/qa.Dockerfile -t qa-runner:v1 .  &&  docker run --rm qa-runner:v1",
     },
     "5": {
-        "objetivo": "Valida una API REST en tres niveles: código de estado HTTP, cabeceras y tiempo de respuesta, "
-                    "y contrato de datos con JSON Schema.",
-        "lectura": "Si el backend cambia un tipo de dato, la prueba de esquema falla antes de afectar al cliente.",
+        "componente": "API de clientes del banco",
+        "objetivo": "Valida la API de clientes en tres niveles: código HTTP (200 o 404), tiempo de respuesta "
+                    "y contrato JSON Schema (nombre, documento, score entre 300 y 850 y estado activo).",
+        "lectura": "Si el backend cambia un tipo de dato, la prueba de esquema falla antes de afectar a los "
+                   "canales del banco.",
         "comando": "docker compose up --build --exit-code-from test-runner api-service test-runner",
     },
     "6": {
-        "objetivo": "GitHub Actions ejecuta pruebas, contenedores, carga e infraestructura en cada push a main. "
-                    "Si algo falla, el pipeline bloquea la entrega.",
-        "lectura": "Aquí se ven las pruebas de la API base; el historial de ejecuciones del pipeline está "
+        "componente": "Servicio de crédito base e integración continua",
+        "objetivo": "GitHub Actions prueba todo el sistema de crédito en cada push a main. Si algo falla, "
+                    "el pipeline bloquea la entrega.",
+        "lectura": "Aquí se ven las pruebas del servicio base; el historial de ejecuciones del pipeline está "
                    "en la pestaña Actions del repositorio.",
         "comando": "git push origin main",
     },
     "7": {
-        "objetivo": "Revisa el código sin ejecutarlo: flake8 en cada corrida y SonarCloud en el pipeline. "
-                    "Cero hallazgos es la tercera condición del Quality Gate.",
+        "componente": "Cálculo del total a pagar",
+        "objetivo": "El cálculo del total (monto más intereses) se mantiene limpio y seguro: flake8 en cada "
+                    "corrida y SonarCloud en el pipeline. Cero hallazgos es condición del Quality Gate.",
         "lectura": "Cada hallazgo indica archivo, línea, regla y mensaje. Una variable sin uso (F841) "
                    "basta para rechazar la entrega.",
         "comando": "python -m flake8 .",
     },
     "8": {
-        "objetivo": "Simula usuarios concurrentes con Locust para medir latencia y peticiones por segundo, "
-                    "y evidenciar el cuello de botella del endpoint /slow.",
+        "componente": "Simulación de crédito y consulta al buró bajo carga",
+        "objetivo": "Simula cientos de clientes a la vez: la simulación responde en milisegundos y la consulta "
+                    "a la central de riesgo (buró) es el cuello de botella.",
         "lectura": "Latencia: cuánto tarda una petición (p95 = el 95% tarda menos que ese valor). "
                    "Throughput: peticiones atendidas por segundo.",
         "comando": "python scripts/run_load_test.py -u 200 -r 20 -t 30",
     },
     "9": {
-        "objetivo": "Antes de llegar a Producción, Staging debe responder HTTP 200. Si falla, el pipeline "
-                    "revierte automáticamente a la versión estable y avisa por Telegram.",
-        "lectura": "Promocionado: el cambio llegó a Producción. Rollback: el fallo quedó aislado en Staging. "
+        "componente": "Despliegue del servicio de crédito",
+        "objetivo": "Antes de producción se validan las reglas de crédito y Staging debe responder HTTP 200. "
+                    "Si algo falla, el pipeline bloquea o revierte y avisa por Telegram.",
+        "lectura": "Promocionado: el cambio llegó a Producción. Rollback o Bloqueado: el fallo quedó aislado. "
                    "El secreto siempre se muestra enmascarado.",
         "comando": "python scripts/run_deploy.py --escenario exitoso | fallo | caido",
     },
     "10": {
-        "objetivo": "La infraestructura (bucket S3 y cola SQS) se declara y crea con código en LocalStack, "
-                    "una nube AWS emulada en Docker. Ejecutarlo varias veces deja el mismo resultado.",
-        "lectura": "Las pruebas de integración solo se ejecutan con LocalStack encendido; si está apagado "
-                   "aparecen como omitidas.",
+        "componente": "Expedientes de solicitudes y cola de decisiones",
+        "objetivo": "El bucket S3 de expedientes y la cola SQS de decisiones se crean con código en LocalStack. "
+                    "Ejecutarlo varias veces deja el mismo resultado.",
+        "lectura": "Las pruebas de integración guardan un expediente y publican una decisión; solo corren con "
+                   "LocalStack encendido, si no aparecen como omitidas.",
         "comando": "docker compose --profile iac up -d localstack  &&  python -m src.semana10.init_infra",
     },
 }
@@ -336,7 +349,7 @@ def build_summary() -> dict:
         "repo_actions": REPO_ACTIONS_URL,
     }
     resumen["por_semana"] = {s["clave"]: s for s in semanas}
-    resumen["banca"] = resumen_banca(casos, resumen["despliegues"])
+    resumen["banca"] = resumen_banca(casos, resumen["despliegues"], semanas)
     resumen["etapas"] = calcular_etapas(resumen)
     return resumen
 
@@ -380,26 +393,7 @@ def calcular_etapas(resumen: dict) -> list[dict]:
     ]
 
 
-CASOS_DE_USO_BANCA = [
-    {"id": "CU-B01", "nombre": "Evaluar solicitud de crédito", "actor": "Analista de crédito / canal digital",
-     "descripcion": "Envía score e ingresos y recibe APROBADO o RECHAZADO con los motivos de la decisión.",
-     "evidencia": "POST /api/v1/creditos/evaluar · tests/banca/test_api_credito.py", "fuente": "api"},
-    {"id": "CU-B02", "nombre": "Consultar la política vigente", "actor": "Analista de riesgo",
-     "descripcion": "Consulta los bordes de la regla (score mínimo, dominio e ingreso mínimo) y su versión.",
-     "evidencia": "GET /api/v1/creditos/politica", "fuente": "api"},
-    {"id": "CU-B03", "nombre": "Modificar una regla de aprobación", "actor": "Desarrollador",
-     "descripcion": "Cambia la regla en el validador; el CI ejecuta la matriz de valores límite y el Quality Gate.",
-     "evidencia": "src/semana2/validador_credito.py · ci.yml", "fuente": "matriz"},
-    {"id": "CU-B04", "nombre": "Bloquear un despliegue que rompe un borde", "actor": "Pipeline de CD",
-     "descripcion": "Antes de Staging corre la matriz; si un caso falla, el cambio no llega a Producción.",
-     "evidencia": "Gate de reglas en scripts/run_deploy.py · cd.yml", "fuente": "gate"},
-    {"id": "CU-B05", "nombre": "Notificar el bloqueo al equipo", "actor": "Pipeline de CD → On-call",
-     "descripcion": "Envía a Telegram qué casos de valores límite fallaron y que Producción sigue estable.",
-     "evidencia": "MSG_REGLAS en src/semana9/deploy.py", "fuente": "gate"},
-]
-
-
-def resumen_banca(casos: list[dict], despliegues: list[dict]) -> dict:
+def resumen_banca(casos: list[dict], despliegues: list[dict], semanas: list[dict]) -> dict:
     """Une la matriz de valores límite con los resultados de la última ejecución."""
     propios = [c for c in casos if c["semana"] == "banca"]
     por_id = {c["parametros"]: c for c in propios if c["funcion"] == "test_matriz_valores_limite"}
@@ -417,7 +411,9 @@ def resumen_banca(casos: list[dict], despliegues: list[dict]) -> dict:
     else:
         estado = "fallo" if fallidas else "ok"
     estado_gate = "pendiente" if not ultimo_gate else ("ok" if ultimo_gate["gate_reglas"] == "aprobado" else "fallo")
-    estados = {"api": estado, "matriz": estado, "gate": estado_gate}
+    estados = {"banca": estado, "gate": estado_gate}
+    for semana in semanas:
+        estados[f"semana{semana['clave']}"] = _estado_semanas(semanas, [semana["clave"]])
     return {
         "politica": politica_banca.politica_vigente(),
         "matriz": matriz,
@@ -428,7 +424,7 @@ def resumen_banca(casos: list[dict], despliegues: list[dict]) -> dict:
         "casos_bva_ok": sum(1 for f in matriz if f["estado"] == "passed"),
         "estado": estado,
         "ultimo_gate": ultimo_gate,
-        "casos_de_uso": [{**cu, "estado": estados[cu["fuente"]]} for cu in CASOS_DE_USO_BANCA],
+        "casos_de_uso": [{**cu, "estado": estados.get(cu["fuente"], "pendiente")} for cu in CASOS_DE_USO],
         "pruebas": propios,
     }
 
