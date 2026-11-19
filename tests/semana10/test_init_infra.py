@@ -106,13 +106,14 @@ def test_localstack_aprovisiona_e_idempotente():
 
 
 @localstack
-def test_localstack_viaje_completo_s3_y_sqs():
+def test_localstack_expediente_en_s3_y_decision_en_sqs():
     s3, sqs = init_infra.crear_cliente("s3"), init_infra.crear_cliente("sqs")
     _, url_cola = init_infra.asegurar_cola(sqs)
     init_infra.asegurar_bucket(s3)
 
-    s3.put_object(Bucket=init_infra.BUCKET, Key="solicitudes/SOL-0001.json", Body=b'{"score": 720, "decision": "APROBADO"}')
-    assert s3.get_object(Bucket=init_infra.BUCKET, Key="solicitudes/SOL-0001.json")["Body"].read() == b'{"score": 720, "decision": "APROBADO"}'
+    clave, expediente = "solicitudes/SOL-0001.json", b'{"score": 720, "decision": "APROBADO"}'
+    s3.put_object(Bucket=init_infra.BUCKET, Key=clave, Body=expediente)
+    assert s3.get_object(Bucket=init_infra.BUCKET, Key=clave)["Body"].read() == expediente
 
     sqs.send_message(QueueUrl=url_cola, MessageBody="SOL-0001:APROBADO")
     mensajes = sqs.receive_message(QueueUrl=url_cola, WaitTimeSeconds=1).get("Messages", [])
