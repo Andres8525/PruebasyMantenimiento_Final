@@ -1,38 +1,40 @@
 """Semana 5 — Microservicio RESTful (FastAPI) que se prueba dentro de contenedores.
 
+Componente del sistema de crédito: API de clientes del banco.
+
 Endpoints:
-    GET /health                 -> healthcheck para Docker Compose
-    GET /api/v1/users           -> lista de usuarios (validada con JSON Schema)
-    GET /api/v1/users/{user_id} -> usuario por ID o 404
+    GET /health                    -> healthcheck para Docker Compose
+    GET /api/v1/clientes           -> lista de clientes (validada con JSON Schema)
+    GET /api/v1/clientes/{id}      -> cliente por ID o 404
 """
 
 from fastapi import FastAPI, HTTPException
 
-app = FastAPI(title="user-api", version="1.0.0")
+app = FastAPI(title="api-clientes", version="1.0.0")
 
 # Base de datos simulada en memoria
-USERS_DB = [
-    {"id": 1, "name": "Carlos Perez", "email": "carlos@example.com", "active": True},
-    {"id": 2, "name": "Ana Gomez", "email": "ana@example.com", "active": False},
+CLIENTES_DB = [
+    {"id": 1, "nombre": "Carlos Perez", "documento": "1012345678", "score": 720, "activo": True},
+    {"id": 2, "nombre": "Ana Gomez", "documento": "1098765432", "score": 580, "activo": False},
 ]
 
 
 # Endpoint 1: Healthcheck para monitoreo del contenedor
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "service": "user-api"}
+    return {"status": "ok", "service": "api-clientes"}
 
 
-# Endpoint 2: Listar todos los usuarios
-@app.get("/api/v1/users")
-def get_users():
-    return USERS_DB
+# Endpoint 2: Listar todos los clientes
+@app.get("/api/v1/clientes")
+def get_clientes():
+    return CLIENTES_DB
 
 
-# Endpoint 3: Consultar usuario por ID
-@app.get("/api/v1/users/{user_id}")
-def get_user(user_id: int):
-    user = next((u for u in USERS_DB if u["id"] == user_id), None)
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return user
+# Endpoint 3: Consultar cliente por ID
+@app.get("/api/v1/clientes/{cliente_id}")
+def get_cliente(cliente_id: int):
+    cliente = next((c for c in CLIENTES_DB if c["id"] == cliente_id), None)
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    return cliente

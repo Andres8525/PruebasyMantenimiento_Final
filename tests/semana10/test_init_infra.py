@@ -49,7 +49,7 @@ def test_aprovisiona_bucket_y_cola():
     resultado = init_infra.aprovisionar(s3, sqs)
     assert resultado["bucket"] == "creado"
     assert resultado["cola"] == "creada"
-    assert init_infra.inventario(s3, sqs) == {"buckets": ["mi-bucket-pruebas"], "colas": ["cola-notificaciones"]}
+    assert init_infra.inventario(s3, sqs) == {"buckets": [init_infra.BUCKET], "colas": [init_infra.COLA]}
 
 
 def test_idempotencia_ejecutar_dos_veces_da_el_mismo_estado():
@@ -101,8 +101,8 @@ def test_localstack_aprovisiona_e_idempotente():
     init_infra.aprovisionar(s3, sqs)
     init_infra.aprovisionar(s3, sqs)
     estado = init_infra.inventario(s3, sqs)
-    assert estado["buckets"].count("mi-bucket-pruebas") == 1
-    assert estado["colas"].count("cola-notificaciones") == 1
+    assert estado["buckets"].count(init_infra.BUCKET) == 1
+    assert estado["colas"].count(init_infra.COLA) == 1
 
 
 @localstack
@@ -111,10 +111,10 @@ def test_localstack_viaje_completo_s3_y_sqs():
     _, url_cola = init_infra.asegurar_cola(sqs)
     init_infra.asegurar_bucket(s3)
 
-    s3.put_object(Bucket="mi-bucket-pruebas", Key="evidencia.txt", Body=b"semana 10")
-    assert s3.get_object(Bucket="mi-bucket-pruebas", Key="evidencia.txt")["Body"].read() == b"semana 10"
+    s3.put_object(Bucket=init_infra.BUCKET, Key="solicitudes/SOL-0001.json", Body=b'{"score": 720, "decision": "APROBADO"}')
+    assert s3.get_object(Bucket=init_infra.BUCKET, Key="solicitudes/SOL-0001.json")["Body"].read() == b'{"score": 720, "decision": "APROBADO"}'
 
-    sqs.send_message(QueueUrl=url_cola, MessageBody="despliegue-ok")
+    sqs.send_message(QueueUrl=url_cola, MessageBody="SOL-0001:APROBADO")
     mensajes = sqs.receive_message(QueueUrl=url_cola, WaitTimeSeconds=1).get("Messages", [])
-    assert [m["Body"] for m in mensajes] == ["despliegue-ok"]
+    assert [m["Body"] for m in mensajes] == ["SOL-0001:APROBADO"]
     sqs.delete_message(QueueUrl=url_cola, ReceiptHandle=mensajes[0]["ReceiptHandle"])

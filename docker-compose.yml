@@ -47,7 +47,7 @@ services:
     volumes:
       - ./reports:/workspace/reports
 
-  # Semana 8 — API objetivo de la prueba de carga (/fast y /slow)
+  # Semana 8 — API objetivo de la prueba de carga (simulación de crédito y consulta al buró)
   api-carga:
     profiles: ["carga"]
     image: qa-runner:v1

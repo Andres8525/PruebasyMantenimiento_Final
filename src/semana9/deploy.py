@@ -34,14 +34,14 @@ BLOQUEADO_REGLAS = "BLOQUEADO_REGLAS"
 
 MSG_EXITO = (
     "🚀 *DESPLIEGUE EXITOSO EN PRODUCCIÓN*\n\n"
-    "• *Servicio:* API Principal (FastAPI)\n"
+    "• *Servicio:* Evaluación de crédito (FastAPI)\n"
     "• *Entorno:* Producción\n"
     "• *Smoke Test:* 200 OK en Staging\n"
     f"• *Estado:* v{VERSION_ESTABLE} Operativa"
 )
 MSG_ROLLBACK = (
     "🚨 *ALERTA: ROLLBACK AUTOMÁTICO ACTIVADO*\n\n"
-    "• *Servicio:* API Principal\n"
+    "• *Servicio:* Evaluación de crédito\n"
     "• *Fallo en Staging:* HTTP {codigo}\n"
     "• *Acción:* Despliegue abortado\n"
     f"• *Estado actual:* Se mantiene v{VERSION_ESTABLE} estable"

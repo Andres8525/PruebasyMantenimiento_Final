@@ -35,7 +35,7 @@ HISTORY_LIMIT = 50
 LINT_FORMAT = "%(path)s|%(row)d|%(col)d|%(code)s|%(text)s"
 
 # Umbrales de la prueba de carga (Semana 8): p95 máximo por endpoint, en ms
-LOAD_P95_MS = {"/fast": 500, "/slow": 1500}
+LOAD_P95_MS = {"/api/v1/creditos/simulacion": 500, "/api/v1/creditos/buro": 1500}
 
 # Catálogo de clases: qué se vio en cada semana (fuente: PDFs de la materia)
 SEMANAS = {

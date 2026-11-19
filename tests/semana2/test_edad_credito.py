@@ -1,8 +1,8 @@
-"""Semana 2 — BVA + parametrización sobre el sistema de descuentos (18 a 65 años)."""
+"""Semana 2 — BVA + parametrización sobre el rango de edad financiable (18 a 65 años)."""
 
 import pytest
 
-from src.semana2.modulo_sistema import evaluar_edad
+from src.semana2.edad_credito import evaluar_edad_credito
 
 
 @pytest.mark.parametrize(
@@ -14,8 +14,8 @@ from src.semana2.modulo_sistema import evaluar_edad
         (66, "Denegado"),   # BVA: justo arriba
     ],
 )
-def test_evaluar_edad_limites(edad, resultado_esperado):
-    assert evaluar_edad(edad) == resultado_esperado
+def test_edad_credito_limites(edad, resultado_esperado):
+    assert evaluar_edad_credito(edad) == resultado_esperado
 
 
 @pytest.mark.parametrize(
@@ -26,11 +26,11 @@ def test_evaluar_edad_limites(edad, resultado_esperado):
         (70, "Denegado"),   # EP: clase inválida mayor
     ],
 )
-def test_evaluar_edad_particion_equivalencia(edad, resultado_esperado):
-    assert evaluar_edad(edad) == resultado_esperado
+def test_edad_credito_particion_equivalencia(edad, resultado_esperado):
+    assert evaluar_edad_credito(edad) == resultado_esperado
 
 
 @pytest.mark.parametrize("entrada_invalida", [-1, -100, "dieciocho", None, True])
-def test_evaluar_edad_entradas_invalidas(entrada_invalida):
+def test_edad_credito_entradas_invalidas(entrada_invalida):
     with pytest.raises(ValueError):
-        evaluar_edad(entrada_invalida)
+        evaluar_edad_credito(entrada_invalida)

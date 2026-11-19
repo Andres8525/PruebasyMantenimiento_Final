@@ -1,24 +1,26 @@
-"""Semana 8 — API "dummy" objetivo de las pruebas de carga con Locust.
+"""Semana 8 — API objetivo de las pruebas de carga con Locust.
 
-/fast responde de inmediato; /slow simula un cuello de botella (p. ej. una
-consulta lenta a base de datos) con una pausa de medio segundo.
+Componente del sistema de crédito: consultas masivas de los clientes.
+    /api/v1/creditos/simulacion  responde de inmediato (cálculo local).
+    /api/v1/creditos/buro        simula la consulta a la central de riesgo
+                                 externa: el cuello de botella (0.5 s).
 """
 
 import time
 
 from fastapi import FastAPI
 
-app = FastAPI(title="load-target")
+app = FastAPI(title="credito-carga")
 
-RETARDO_SLOW_SEGUNDOS = 0.5
-
-
-@app.get("/fast")
-def fast_endpoint():
-    return {"status": "ok", "speed": "fast"}
+RETARDO_BURO_SEGUNDOS = 0.5
 
 
-@app.get("/slow")
-def slow_endpoint():
-    time.sleep(RETARDO_SLOW_SEGUNDOS)  # Emula un cuello de botella o base de datos lenta
-    return {"status": "ok", "speed": "slow"}
+@app.get("/api/v1/creditos/simulacion")
+def simulacion():
+    return {"status": "ok", "consulta": "simulacion"}
+
+
+@app.get("/api/v1/creditos/buro")
+def consulta_buro():
+    time.sleep(RETARDO_BURO_SEGUNDOS)  # Emula la central de riesgo externa (cuello de botella)
+    return {"status": "ok", "consulta": "buro"}

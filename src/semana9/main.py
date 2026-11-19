@@ -1,4 +1,4 @@
-"""Semana 9 — API objetivo del pipeline de Despliegue Continuo (CD).
+"""Semana 9 — Servicio de crédito desplegado por el pipeline de Despliegue Continuo (CD).
 
 El endpoint /health es el que audita el Smoke Test en Staging:
     IS_HEALTHY = True  -> HTTP 200 (Caso A: promoción a Producción)
@@ -12,7 +12,7 @@ import os
 
 from fastapi import FastAPI, Response, status
 
-app = FastAPI(title="cd-api")
+app = FastAPI(title="servicio-credito")
 
 VERSION = "1.0.0"
 
@@ -22,7 +22,8 @@ IS_HEALTHY = os.getenv("STAGING_HEALTHY", "true").strip().lower() != "false"
 
 @app.get("/")
 def root():
-    return {"status": "online", "version": VERSION, "env": os.getenv("APP_ENV", "Production")}
+    return {"status": "online", "service": "servicio-credito", "version": VERSION,
+            "env": os.getenv("APP_ENV", "Production")}
 
 
 @app.get("/health")

@@ -49,7 +49,7 @@ def levantar_api() -> tuple[subprocess.Popen, str]:
     limite = time.time() + 15
     while time.time() < limite:
         try:
-            with urlopen(f"{url}/fast", timeout=1):
+            with urlopen(f"{url}/api/v1/creditos/simulacion", timeout=1):
                 return proc, url
         except (URLError, ConnectionError, OSError):
             time.sleep(0.2)

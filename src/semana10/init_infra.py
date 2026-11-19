@@ -1,6 +1,8 @@
 """Semana 10 — Aprovisionamiento IaC en LocalStack (AWS emulado en Docker).
 
-Crea el bucket S3 'mi-bucket-pruebas' y la cola SQS 'cola-notificaciones'.
+Componente del sistema de crédito: almacenamiento de solicitudes y cola de decisiones.
+Crea el bucket S3 'banco-solicitudes-credito' (expedientes de cada solicitud) y la
+cola SQS 'cola-decisiones-credito' (decisiones que consumen los demás sistemas del banco).
 Es idempotente: ejecutarlo 1 o 100 veces deja exactamente el mismo estado.
 
 Uso:
@@ -19,8 +21,8 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 LOCALSTACK_ENDPOINT = os.getenv("LOCALSTACK_ENDPOINT", "http://localhost:4566")
 REGION = "us-east-1"
-BUCKET = "mi-bucket-pruebas"
-COLA = "cola-notificaciones"
+BUCKET = "banco-solicitudes-credito"
+COLA = "cola-decisiones-credito"
 
 _COLA_INEXISTENTE = {"AWS.SimpleQueueService.NonExistentQueue", "QueueDoesNotExist"}
 
