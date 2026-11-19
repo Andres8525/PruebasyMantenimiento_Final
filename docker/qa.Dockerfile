@@ -13,7 +13,7 @@ WORKDIR /workspace
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY pytest.ini .coveragerc .flake8 ./
+COPY pytest.ini .coveragerc .flake8 README.md ./
 COPY config ./config
 COPY src ./src
 COPY tests ./tests
