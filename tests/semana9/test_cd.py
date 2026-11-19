@@ -126,3 +126,29 @@ def test_telegram_error_de_red_no_filtra_el_token(monkeypatch, capsys):
     monkeypatch.setattr(deploy.requests, "post", falla)
     assert deploy.notificar_telegram("hola", token="123:TOKENSECRETO", chat_id="999") is False
     assert "TOKENSECRETO" not in capsys.readouterr().out
+
+
+# --- Gate de reglas de negocio (caso de uso Banca) ---
+def test_gate_de_reglas_fallido_bloquea_sin_tocar_staging(monkeypatch):
+    def staging_no_debe_consultarse(url, timeout):
+        raise AssertionError("con el gate fallido no se debe llegar a Staging")
+
+    enviados = []
+    monkeypatch.setattr(deploy.requests, "get", staging_no_debe_consultarse)
+    registro = deploy.ejecutar_pipeline(
+        "http://staging/health", "s3cr3t", notificar=enviados.append,
+        gate_reglas=lambda: (False, "1 prueba(s) de reglas de crédito fallaron (casos B08)"),
+    )
+    assert registro["resultado"] == deploy.BLOQUEADO_REGLAS
+    assert registro["gate_reglas"] == "fallido"
+    assert "B08" in enviados[0] and "BLOQUEADO" in enviados[0]
+
+
+def test_gate_de_reglas_aprobado_continua_al_smoke_test(monkeypatch):
+    monkeypatch.setattr(deploy.requests, "get", lambda url, timeout: _Respuesta(200))
+    registro = deploy.ejecutar_pipeline(
+        "http://staging/health", "s3cr3t", notificar=lambda m: False,
+        gate_reglas=lambda: (True, "28 de 28 pruebas de reglas de crédito aprobadas"),
+    )
+    assert registro["gate_reglas"] == "aprobado"
+    assert registro["resultado"] == deploy.PROMOCIONADO

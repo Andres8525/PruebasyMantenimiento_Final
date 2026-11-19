@@ -30,6 +30,7 @@ TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
 PROMOCIONADO = "PROMOCIONADO"
 ROLLBACK = "ROLLBACK"
 ROLLBACK_CONEXION = "ROLLBACK_CONEXION"
+BLOQUEADO_REGLAS = "BLOQUEADO_REGLAS"
 
 MSG_EXITO = (
     "🚀 *DESPLIEGUE EXITOSO EN PRODUCCIÓN*\n\n"
@@ -48,6 +49,13 @@ MSG_ROLLBACK = (
 MSG_CAIDO = (
     "🚨 *ALERTA CRÍTICA: SERVIDOR INACCESIBLE*\n\n"
     "• *Acción:* Rollback ejecutado por Timeout/Conexión.\n"
+    f"• *Estado actual:* Se mantiene v{VERSION_ESTABLE} estable"
+)
+MSG_REGLAS = (
+    "🚨 *DESPLIEGUE BLOQUEADO: REGLAS DE CRÉDITO*\n\n"
+    "• *Servicio:* Evaluación de crédito\n"
+    "• *Motivo:* {detalle}\n"
+    "• *Acción:* El cambio no llegó a Staging ni a Producción\n"
     f"• *Estado actual:* Se mantiene v{VERSION_ESTABLE} estable"
 )
 
@@ -79,15 +87,31 @@ def notificar_telegram(mensaje: str, token: str | None = None, chat_id: str | No
     return True
 
 
-def ejecutar_pipeline(url: str, secreto: str, notificar=notificar_telegram) -> dict:
-    """Smoke Test en Staging -> promoción o rollback. Devuelve el registro del despliegue."""
+def ejecutar_pipeline(url: str, secreto: str, notificar=notificar_telegram, gate_reglas=None) -> dict:
+    """[Gate de reglas] -> Smoke Test en Staging -> promoción o rollback.
+
+    gate_reglas: función opcional que devuelve (ok, detalle). Si falla, el despliegue
+    se bloquea antes de tocar Staging (caso de uso Banca).
+    """
     registro = {
         "fecha": datetime.now().isoformat(timespec="seconds"),
         "url": url,
         "token": enmascarar(secreto),
         "http": None,
+        "gate_reglas": None,
     }
     print("=== INICIANDO PIPELINE DE DESPLIEGUE CONTINUO (CD) ===")
+    if gate_reglas is not None:
+        print("[0/3] Gate de reglas de negocio: matriz de valores límite del crédito...")
+        ok, detalle = gate_reglas()
+        registro["gate_reglas"] = "aprobado" if ok else "fallido"
+        if not ok:
+            print(f" -> [BLOQUEADO] {detalle}")
+            print(" El cambio en las reglas de aprobación no llega a Producción.")
+            registro.update(resultado=BLOQUEADO_REGLAS, detalle=detalle)
+            registro["telegram"] = notificar(MSG_REGLAS.format(detalle=detalle))
+            return registro
+        print(f" -> [OK] {detalle}")
     print(f"[1/3] Verificando credenciales inyectadas... Token: {registro['token']}")
     print(f"[2/3] Ejecutando Smoke Test en Staging ({url})...")
     try:

@@ -10,6 +10,9 @@ Escenarios (los 3 de la clase):
     python scripts/run_deploy.py --escenario caido     # Staging apagado -> rollback por conexión
     python scripts/run_deploy.py --url http://host:8001/health   # Staging ya levantado
 
+Antes del Smoke Test corre el Gate de reglas de negocio (caso de uso Banca): si
+alguna prueba de valores límite del crédito falla, el despliegue se bloquea.
+
 Telegram: definir TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en el entorno.
 Código de salida: 0 = promocionado, 1 = rollback.
 """
@@ -19,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -59,6 +63,20 @@ def levantar_staging(saludable: bool) -> tuple[subprocess.Popen, str]:
     raise RuntimeError("Staging no arrancó a tiempo")
 
 
+def gate_reglas_credito() -> tuple[bool, str]:
+    """Caso de uso Banca: ejecuta la matriz de valores límite antes de desplegar."""
+    cmd = [sys.executable, "-m", "pytest", "-m", "banca", "-q", "-rf", "--no-cov", "-p", "no:cacheprovider"]
+    proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    salida = proc.stdout + proc.stderr
+    aprobadas = int(next(iter(re.findall(r"(\d+) passed", salida)), 0))
+    fallidas = int(next(iter(re.findall(r"(\d+) failed", salida)), 0))
+    if proc.returncode == 0:
+        return True, f"{aprobadas} de {aprobadas} pruebas de reglas de crédito aprobadas"
+    casos = sorted(set(re.findall(r"\[(B\d+)\]", salida)))
+    detalle = f"{fallidas} prueba(s) de reglas de crédito fallaron"
+    return False, detalle + (f" (casos {', '.join(casos)})" if casos else "")
+
+
 def guardar(registro: dict) -> None:
     historial = reports.load_deploys()
     historial.append(registro)
@@ -82,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
         staging, url = levantar_staging(saludable=args.escenario == "exitoso")
 
     try:
-        registro = deploy.ejecutar_pipeline(url, secreto)
+        registro = deploy.ejecutar_pipeline(url, secreto, gate_reglas=gate_reglas_credito)
     finally:
         if staging:
             staging.terminate()
