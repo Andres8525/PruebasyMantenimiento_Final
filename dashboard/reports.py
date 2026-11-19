@@ -43,7 +43,7 @@ SEMANAS = {
     "1": {
         "titulo": "Patrón AAA y Pytest",
         "tecnica": "Arrange · Act · Assert, terminal verde vs. roja",
-        "modulo": "src/semana1/sistema.py",
+        "modulo": "src/semana1/solicitante.py",
     },
     "2": {
         "titulo": "Valores Límite y Parametrización",
@@ -53,12 +53,12 @@ SEMANAS = {
     "3": {
         "titulo": "Cobertura y Quality Gates",
         "tecnica": "pytest-cov con --cov-fail-under=80",
-        "modulo": "src/semana3/validator.py",
+        "modulo": "src/semana3/perfil_cliente.py",
     },
     "4": {
         "titulo": "Cultura DevOps y Docker",
         "tecnica": "Dockerfile qa-runner, contenedor efímero, exit code 0",
-        "modulo": "src/semana4/app.py",
+        "modulo": "src/semana4/tasa_interes.py",
     },
     "5": {
         "titulo": "Pruebas de API en Contenedores",
@@ -73,7 +73,7 @@ SEMANAS = {
     "7": {
         "titulo": "Análisis Estático y Quality Gates",
         "tecnica": "flake8 + SonarCloud en el pipeline",
-        "modulo": "src/semana7/calculadora.py",
+        "modulo": "src/semana7/total_credito.py",
     },
     "8": {
         "titulo": "Pruebas de Carga con Locust",
